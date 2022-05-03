@@ -16,6 +16,8 @@ contributors: ["Mike Vainio"]
 
 ### Yeah trice
 
+## whaat
+
 Checkout this script brah!
 
 ```bash
@@ -25,3 +27,5 @@ done
 ```
 
 Much wow.
+
+{{< details "Cool little box" >}} After clicking this text is visible. (see also [whaat]({{< relref "blog/test-post/index#whaat" >}})) {{< /details >}}

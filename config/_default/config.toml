@@ -1,9 +1,9 @@
-baseurl = "https://doks.netlify.app/"
+baseurl = "https://maik.fi/"
 canonifyURLs = false
 disableAliases = true
 disableHugoGeneratorInject = true
 enableEmoji = true
-enableGitInfo = false
+enableGitInfo = true
 enableRobotsTXT = true
 languageCode = "en-US"
 paginate = 7
@@ -14,6 +14,7 @@ defaultContentLanguage = "en"
 disableLanguages = ["de", "nl"]
 # defaultContentLanguageInSubdir = true
 
+### NETLIFY SPECIFIC ###
 # add redirects/headers
 [outputs]
 home = ["HTML", "RSS", "REDIRECTS", "HEADERS"]
@@ -37,6 +38,7 @@ mediaType = "text/netlify"
 baseName = "_headers"
 isPlainText = true
 notAlternative = true
+### NETLIFY SPECIFIC ###
 
 # add output format for section sitemap.xml
 [outputFormats.SITEMAP]

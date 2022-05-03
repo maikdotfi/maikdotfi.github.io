@@ -1,7 +1,7 @@
 # Meta Data for SEO
 
 ## Homepage
-title = "Mike Vainio"
+title = "Maik"
 titleSeparator = "-"
 titleAddition = "Cloud and DevOps professional and consultant."
 description = "I occasionally build stuff on my spare time."
@@ -74,7 +74,7 @@ docsRepo = "https://github.com/maikdotfi/maikdotfi.github.io"
 docsRepoBranch = "main"
 docsRepoSubPath = ""
 editPage = true
-lastMod = false
+lastMod = true
 
 [options]
   lazySizes = true
