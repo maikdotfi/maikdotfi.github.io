@@ -26,6 +26,23 @@ for i in {1..100}; do
 done
 ```
 
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type SuperType struct {
+	Path string `json:"path"`
+}
+
+func main() {
+  fmt.Println("Hello World!")
+}
+
+```
+
 Much wow.
 
 {{< details "Cool little box" >}} After clicking this text is visible. (see also [whaat]({{< relref "blog/test-post/index#whaat" >}})) {{< /details >}}
