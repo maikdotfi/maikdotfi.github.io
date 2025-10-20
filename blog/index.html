@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --fg: #0f141e;
+      --accent: #1c64f2;
+      --muted: #6b7280;
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141e;
+        --fg: #f8fafc;
+        --muted: #94a3b8;
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    header {
+      margin-bottom: 3rem;
+    }
+
+    header a {
+      color: inherit;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    header a:hover,
+    header a:focus {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.03em;
+    }
+
+    p.lede {
+      margin: 0;
+      max-width: 32rem;
+      color: var(--muted);
+    }
+
+    article {
+      padding: 1.75rem 1.5rem;
+      border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--bg) 85%, white 15%);
+      margin-bottom: 1.5rem;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    article:hover,
+    article:focus-within {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 36px -18px rgba(17, 24, 39, 0.35);
+    }
+
+    article h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1.65rem;
+      letter-spacing: -0.015em;
+    }
+
+    article h2 a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    article h2 a:hover,
+    article h2 a:focus {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .meta {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .tags {
+      display: inline-flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .excerpt {
+      margin: 0 0 1.25rem;
+      line-height: 1.6;
+    }
+
+    .read-more {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .read-more svg {
+      width: 18px;
+      height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a href="../index.html">← Back to maik.fi</a>
+      <h1>Blog</h1>
+      <p class="lede">Occasional dispatches from the trenches. Expect rants, drunken mumblings, and opinions strong enough to give you a hangover.</p>
+    </header>
+
+    <article>
+      <h2><a href="01-cloud-bs.html">The Cloud is Bullshit</a></h2>
+      <div class="meta">
+        <time datetime="2025-08-23">August 23, 2025</time> · by Mike ·
+        <span class="tags">
+          <span class="tag">cloud</span>
+          <span class="tag">bullshit</span>
+        </span>
+      </div>
+      <p class="excerpt">
+        Wrestling IaC and APIs feels like busywork that delivers nothing to the business. For a stack that promised to abstract hardware away, the modern cloud sure loves
+        knobs and yak shaving.
+      </p>
+      <a class="read-more" href="01-cloud-bs.html">
+        Read the rant
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M13.172 12 8.586 7.414 10 6l6 6-6 6-1.414-1.414z"/>
+        </svg>
+      </a>
+    </article>
+  </div>
+</body>
+</html>

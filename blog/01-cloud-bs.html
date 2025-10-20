@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Cloud is Bullshit | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --fg: #0f141e;
+      --accent: #1c64f2;
+      --muted: #6b7280;
+      --border: color-mix(in srgb, var(--muted) 25%, transparent);
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141e;
+        --fg: #f8fafc;
+        --muted: #94a3b8;
+        --border: color-mix(in srgb, var(--muted) 40%, transparent);
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    nav a {
+      color: inherit;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    article {
+      margin-top: 2.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 4.5vw, 3.2rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.035em;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tags {
+      display: inline-flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-top: 0.65rem;
+    }
+
+    .tag {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    article p {
+      line-height: 1.7;
+      font-size: 1.05rem;
+      margin: 1.3rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="index.html">← All posts</a> · <a href="../index.html">maik.fi home</a>
+    </nav>
+    <article>
+      <header>
+        <h1>The Cloud is Bullshit</h1>
+        <p class="meta">
+          <time datetime="2025-08-23">August 23, 2025</time> · by Mike
+        </p>
+        <div class="tags">
+          <span class="tag">cloud</span>
+          <span class="tag">bullshit</span>
+        </div>
+      </header>
+      <p>I have been working in a greenfield project at a client in a completely new context for me. As usual, I have been doing some IaC etc. to deploy our stuff into the <em>Cloud</em> as usual.</p>
+      <p>While setting the infrastructure up I (again) realised how much effort I spent on things that have absolutely 0 value to the organisation, to the business. It's just bullshit. Why am I spending all this time fiddling with the IaC, struggling with the API, the shit documentation etc.</p>
+      <p>I guess the cloud started with just VMs (Elastic Compute etc.) and some simple services on the side that you can run without worrying about <strong>hardware</strong>, but it sure as fuck has stayed that way too. By now I would have hoped that all this infrastructure BS would be handled for me, I would be able to focus on shipping the software instead of fiddling with all the knobs of the infrastructure endlessly.</p>
+      <p>In the olden days we would setup a server, install a LAMP stack or whatever and get the software up and running. If we were really advanced we would setup some Jenkins pipelines to package and deploy stuff. The Jenkins could have been running on an old company laptop at my colleagues desk (if this sounds bit too detailed, that's because it's a true story).</p>
+      <p>Of course fiddling the knobs of cloud infrastructure has kept food on the table for quite some years, but it's still bullshit.</p>
+      <p>/rant</p>
+    </article>
+  </div>
+</body>
+</html>
