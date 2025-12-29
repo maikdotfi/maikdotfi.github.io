@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --fg: #0f141e;
+      --accent: #1c64f2;
+      --muted: #6b7280;
+      --border: color-mix(in srgb, var(--muted) 25%, transparent);
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141e;
+        --fg: #f8fafc;
+        --muted: #94a3b8;
+        --border: color-mix(in srgb, var(--muted) 40%, transparent);
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    nav a {
+      color: inherit;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    article {
+      margin-top: 2.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 4.5vw, 3.2rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.035em;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tags {
+      display: inline-flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-top: 0.65rem;
+    }
+
+    .tag {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    article p {
+      line-height: 1.7;
+      font-size: 1.05rem;
+      margin: 1.3rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="index.html">← All posts</a> · <a href="../index.html">maik.fi home</a>
+    </nav>
+    <article>
+      <header>
+        <h1>{{.Title}}</h1>
+        <p class="meta">
+          <time datetime="{{.DateISO}}">{{.DateHuman}}</time>{{if .AuthorLine}} · by {{.AuthorLine}}{{end}}
+        </p>
+        {{- if .Tags}}
+        <div class="tags">
+          {{- range .Tags }}
+          <span class="tag">{{.}}</span>
+          {{- end }}
+        </div>
+        {{- end}}
+      </header>
+{{.Content}}
+    </article>
+  </div>
+</body>
+</html>
