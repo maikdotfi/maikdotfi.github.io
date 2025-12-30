@@ -283,6 +283,9 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	var firstParagraph string
 	var title string
 	inList := false
+	inCodeBlock := false
+	var codeLines []string
+	var codeLang string
 	const blockIndent = "      "
 
 	flushParagraph := func() {
@@ -300,6 +303,25 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 		paragraph = nil
 	}
 
+	flushCodeBlock := func() {
+		if !inCodeBlock {
+			return
+		}
+		builder.WriteString(blockIndent)
+		builder.WriteString("<pre><code")
+		if codeLang != "" {
+			builder.WriteString(` class="language-`)
+			builder.WriteString(html.EscapeString(codeLang))
+			builder.WriteString(`"`)
+		}
+		builder.WriteString(">")
+		builder.WriteString(escapeText(strings.Join(codeLines, "\n")))
+		builder.WriteString("</code></pre>\n")
+		inCodeBlock = false
+		codeLines = nil
+		codeLang = ""
+	}
+
 	closeList := func() {
 		if inList {
 			builder.WriteString(blockIndent)
@@ -311,6 +333,23 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	for _, line := range lines {
 		line = strings.TrimRight(line, " \t")
 		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") {
+			if inCodeBlock {
+				flushCodeBlock()
+			} else {
+				flushParagraph()
+				closeList()
+				inCodeBlock = true
+				codeLang = strings.TrimSpace(strings.TrimPrefix(trimmed, "```"))
+			}
+			continue
+		}
+
+		if inCodeBlock {
+			codeLines = append(codeLines, line)
+			continue
+		}
+
 		if trimmed == "" {
 			flushParagraph()
 			closeList()
@@ -351,6 +390,7 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 
 	flushParagraph()
 	closeList()
+	flushCodeBlock()
 
 	return template.HTML(builder.String()), strings.TrimSpace(firstParagraph), strings.TrimSpace(title)
 }
