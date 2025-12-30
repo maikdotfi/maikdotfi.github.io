@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python is great although it sucks | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --fg: #0f141e;
+      --accent: #1c64f2;
+      --muted: #6b7280;
+      --border: color-mix(in srgb, var(--muted) 25%, transparent);
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141e;
+        --fg: #f8fafc;
+        --muted: #94a3b8;
+        --border: color-mix(in srgb, var(--muted) 40%, transparent);
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    nav a {
+      color: inherit;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    article {
+      margin-top: 2.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 4.5vw, 3.2rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.035em;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tags {
+      display: inline-flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-top: 0.65rem;
+    }
+
+    .tag {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    article p {
+      line-height: 1.7;
+      font-size: 1.05rem;
+      margin: 1.3rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="index.html">← All posts</a> · <a href="../index.html">maik.fi home</a>
+    </nav>
+    <article>
+      <header>
+        <h1>Python is great although it sucks</h1>
+        <p class="meta">
+          <time datetime="2025-11-22">November 22, 2025</time> · by Mike
+        </p>
+        <div class="tags">
+          <span class="tag">python</span>
+          <span class="tag">fun</span>
+        </div>
+      </header>
+      <p>I've been writing Python again and to my surprise, I've been enjoying it a lot! For the most part.</p>
+      <p>What I really enjoy in Python is the actual writing and how concise, yet expressive, the language can be at the same time. Of course this does depend on how you write it, and one of the weaknesses I've seen with Python is that people write really shit code in Python. That's not Python's fault directly, but Python sure does allow/encourage some stuff I think should be straight up illegal, like awful one-liner syntax that some people consider <em>elegant</em>. Fuck me.</p>
+      <p>However, my main issue with Python is that it sucks ass the second you want to actually run it someplace else than your laptop. Coming back to Python from working mostly with Go, it's easy to see the appeal in the static binaries and cross-compilation that Go has. (of course Go isn't perfect either).</p>
+      <h2>B-b-but uv!</h2>
+      <p>I know somebody reading this already thought to themselves &#34;man, uv solves that, stop bitching&#34;. Yeaah, I mean it helps. If you are in an environment of heterogeneous hardware, no network limitations and fast connectivity too, then <code>uv</code> probably does fix Python packaging and runtime challenges quite neatly. I agree. But when you are dealing with different architectures (x86, arm64) and with different operating systems (Linux, macOS, even fucking Windows) AND you cannot just download bunch of shit from the internet... Python sucks.</p>
+      <h2>What does not suck</h2>
+      <p>All things have pros and cons, so all things suck, at least a bit. But Python can be pretty fun, and I had some fun writing it after a long break of not writing more than a few lines here and there for years.</p>
+
+    </article>
+  </div>
+</body>
+</html>

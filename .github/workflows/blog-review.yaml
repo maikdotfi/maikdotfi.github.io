@@ -32,7 +32,7 @@ jobs:
 
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
-          OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -58,12 +58,23 @@ jobs:
 
           You can use gh CLI to post comments `gh pr comment "$PR" --bode "<your comment>"`
 
-          You can also use the `gh api` to post to the "repos/${OWNER}/${REPO_NAME}/pulls/${PR}/reviews" endpoint for inline comments.
+          You can also use the `gh api` to post inline comments like this:
 
-          Overall, just use the gh CLI to observe the pull request and get your job done.
+          ```
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/$REPO/pulls/$PR_NUMBER/comments \
+            -f 'body=Great stuff!' -f 'commit_id=6dcb09b5b57875f334f61aebed695e2e4193db5e' -f 'path=file1.txt' -F "start_line=1" -f 'start_side=RIGHT' -F "line=2" -f 'side=RIGHT'
+          ```
+
+          Overall, just use the gh CLI to observe the pull request and get your job done. DO NOT ASK ME TO DO ANYTHING! You are an agent and you can take action with the `gh` cli.
 
           Rules:
           - Only comment on changed lines in the PR.
+          - Consider also existing comments so you do not comment on the same issue again if the PR is updated via force push for example
+          - Only comment to markdown files, the HTML files are generated
           - If you are not confident about an inline location, omit it.
           - Keep inline comments concise and actionable.
           PROMPT
