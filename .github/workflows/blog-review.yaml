@@ -1,0 +1,72 @@
+name: Codex PR blog reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+# Strict permissions for the GitHub token (GITHUB_TOKEN)
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  codex_review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR merge commit
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Install Codex CLI
+        run: npm i -g @openai/codex
+
+      - name: Run Codex
+        env:
+          OLLAMA_API_KEY: ${{ secrets.CODEX_API_KEY }}
+
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          # Force Codex to use an isolated config directory so it cannot reuse cached OAuth creds
+          export CODEX_HOME="$GITHUB_WORKSPACE/.codex-ci"
+          mkdir -p "$CODEX_HOME"
+          
+          # Create a clean config.toml (Codex reads this)
+          cat > "$CODEX_HOME/config.toml" <<'EOF'
+          model ="gpt-oss:120b-cloud"
+          model_provider = "ollamacloud"
+          
+          [model_providers.ollamacloud]
+          name = "Ollama"
+          base_url = "https://ollama.com/v1"
+          env_key = "OLLAMA_API_KEY"
+          EOF
+
+          cat > prompt.txt <<'PROMPT'
+          You are a blog post reviewer. Check the blog post for typos and other problems with the language.
+          
+          Blogs live under the ./blog folder, if there are no changes there then you don't have to do anything.
+
+          You can use gh CLI to post comments `gh pr comment "$PR" --bode "<your comment>"`
+
+          You can also use the `gh api` to post to the "repos/${OWNER}/${REPO_NAME}/pulls/${PR}/reviews" endpoint for inline comments.
+
+          Overall, just use the gh CLI to observe the pull request and get your job done.
+
+          Rules:
+          - Only comment on changed lines in the PR.
+          - If you are not confident about an inline location, omit it.
+          - Keep inline comments concise and actionable.
+          PROMPT
+
+          codex exec --yolo "$(cat prompt.txt)"
+
