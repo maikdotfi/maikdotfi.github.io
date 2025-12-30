@@ -90,4 +90,4 @@ jobs:
 
 I greatly simplified the prompt, I had to experiment a bit with it to get it to do what I wanted. However, I really recommend trying to keep it short, the shorter you can make your point the better the prompt (in my experience).
 
-I think it's fun having an LLM buddy commenting on my blog posts, and it has given good feedback although it has a problem with swear words occasionally, weird.
+I think it's fun having an LLM buddy commenting on my blog posts, and it has given good feedback although it has a problem with swear words occasionally. Weird.
