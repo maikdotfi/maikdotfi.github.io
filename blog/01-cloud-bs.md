@@ -17,6 +17,8 @@ I guess the cloud started with just VMs (Elastic Compute) and some simple servic
 
 In the olden days we would setup a server, install a LAMP stack of whatever and get the software up and running. If we were really advanced we would setup some Jenkins pipelines to package and deploy stuff. The Jenkins could have been running on an old company laptop at a colleagues desk (if this sounds bit too detailed, that's because it's a true story).
 
+The real difference here is that the activities from the olden days are what I would consider the _essential_ complexity of the task, but in the Cloud I feel too much time is spent on managing _accidental_ complexity. Of course the shape of the software architecture is often also different in these Cloud deployments and it enables **some** teams to solve genuine scaling challenges, but adds accidental complexity to most. Good example is that teams _must_ deploy to a Kubernetes service in the Cloud, while they could be just using a higher level abstraction happily (and migrate to another if that is truly needed one day).
+
 Of course fiddling the knobs of cloud infrastructure has kept food on the table for quite some years, but it's still bullshit.
 
 /rant
