@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{.Title}} | maik.fi</title>
+  <title>{{safe .Title}} | maik.fi</title>
   <link rel="icon" href="../favicon.ico">
   <style>
     :root {
@@ -98,14 +98,14 @@
     </nav>
     <article>
       <header>
-        <h1>{{.Title}}</h1>
+        <h1>{{safe .Title}}</h1>
         <p class="meta">
-          <time datetime="{{.DateISO}}">{{.DateHuman}}</time>{{if .AuthorLine}} · by {{.AuthorLine}}{{end}}
+          <time datetime="{{.DateISO}}">{{.DateHuman}}</time>{{if .AuthorLine}} · by {{safe .AuthorLine}}{{end}}
         </p>
         {{- if .Tags}}
         <div class="tags">
           {{- range .Tags }}
-          <span class="tag">{{.}}</span>
+          <span class="tag">{{safe .}}</span>
           {{- end }}
         </div>
         {{- end}}

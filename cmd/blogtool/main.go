@@ -37,8 +37,13 @@ type post struct {
 var templateFS embed.FS
 
 var (
-	postTpl  = template.Must(template.ParseFS(templateFS, "templates/post.tmpl"))
-	indexTpl = template.Must(template.ParseFS(templateFS, "templates/index.tmpl"))
+	templateFuncs = template.FuncMap{
+		"safe": func(s string) template.HTML {
+			return template.HTML(escapeText(s))
+		},
+	}
+	postTpl  = template.Must(template.New("post.tmpl").Funcs(templateFuncs).ParseFS(templateFS, "templates/post.tmpl"))
+	indexTpl = template.Must(template.New("index.tmpl").Funcs(templateFuncs).ParseFS(templateFS, "templates/index.tmpl"))
 )
 
 func main() {

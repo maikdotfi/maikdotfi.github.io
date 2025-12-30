@@ -208,16 +208,16 @@
 
     {{- range .Posts}}
     <article>
-      <h2><a href="{{.Href}}">{{.Title}}</a></h2>
+      <h2><a href="{{.Href}}">{{safe .Title}}</a></h2>
       <div class="meta">
-        <time datetime="{{.DateISO}}">{{.DateHuman}}</time>{{if .AuthorLine}} · by {{.AuthorLine}}{{end}}{{if .Tags}} ·
+        <time datetime="{{.DateISO}}">{{.DateHuman}}</time>{{if .AuthorLine}} · by {{safe .AuthorLine}}{{end}}{{if .Tags}} ·
         <span class="tags">
           {{- range .Tags }}
-          <span class="tag">{{.}}</span>
+          <span class="tag">{{safe .}}</span>
           {{- end }}
         </span>{{end}}
       </div>
-      {{if .Excerpt}}<p class="excerpt">{{.Excerpt}}</p>{{end}}
+      {{if .Excerpt}}<p class="excerpt">{{safe .Excerpt}}</p>{{end}}
       <a class="read-more" href="{{.Href}}">
         Read the rant
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
