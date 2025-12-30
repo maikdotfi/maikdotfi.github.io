@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLMs in your CI can be awesome | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --fg: #0f141e;
+      --accent: #1c64f2;
+      --muted: #6b7280;
+      --border: color-mix(in srgb, var(--muted) 25%, transparent);
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141e;
+        --fg: #f8fafc;
+        --muted: #94a3b8;
+        --border: color-mix(in srgb, var(--muted) 40%, transparent);
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    nav a {
+      color: inherit;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    article {
+      margin-top: 2.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 4.5vw, 3.2rem);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.035em;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tags {
+      display: inline-flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-top: 0.65rem;
+    }
+
+    .tag {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    article p {
+      line-height: 1.7;
+      font-size: 1.05rem;
+      margin: 1.3rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="index.html">← All posts</a> · <a href="../index.html">maik.fi home</a>
+    </nav>
+    <article>
+      <header>
+        <h1>LLMs in your CI can be awesome</h1>
+        <p class="meta">
+          <time datetime="2025-12-30">December 30, 2025</time> · by Mike
+        </p>
+        <div class="tags">
+          <span class="tag">ci</span>
+          <span class="tag">llms</span>
+        </div>
+      </header>
+      <p>Like most people, I'm not convinced that LLMs(/thE Ai) will be replacing software professionals. But, I do find that it's very difficult to know when LLM is a good fit for a task and when you should just do it manually. One place where it feels like a quick and easy, continuous, win is the CI pipeline. Even if that fucker makes some mistakes, it's still sort of &#34;a pair of eyes&#34; to look at your commit.</p>
+      <h2>Ollama, let's fucking go</h2>
+      <p>To prove my point I've added a simple blog reviewer to my blog repository. It just uses Codex CLI in the pipeline and I've pointed it to Ollama Cloud (becuz free). Although Codex is a coding agent, or that is the system prompt, it is a way to allow the LLM to use tools (mainly the gh CLI), and do the agent loop.</p>
+      <p>Here's a simplified example of how you would do this in general:</p>
+      <p><code></code><code>yaml name: Codex PR blog reviewer</code></p>
+      <p>on: pull<em>request: types: [opened, synchronize, reopened]</em></p>
+      <h1>Strict permissions for the GitHub token (GITHUB<em>TOKEN)</em></h1>
+      <p>permissions: contents: read pull-requests: write</p>
+      <p>jobs: codex<em>review: runs-on: ubuntu-latest</em></p>
+      <p>steps:</p>
+      <ul>
+        <li>name: Checkout PR merge commit</li>
+      <p>uses: actions/checkout@v5 with: fetch-depth: 1</p>
+      </ul>
+      <ul>
+        <li>name: Install Codex CLI</li>
+      <p>run: npm i -g @openai/codex</p>
+      </ul>
+      <ul>
+        <li>name: Run Codex</li>
+      <p>env: SOMEPROVIDER<em>API</em>KEY: ${{ secrets.CODEX<em>API</em>KEY }}</p>
+      </ul>
+      <p>PR<em>NUMBER: ${{ github.event.pull</em>request.number }} REPO: ${{ github.repository }} GH<em>TOKEN: ${{ github.token }} run: | set -euo pipefail</em></p>
+      <p>cat &gt; prompt.txt &lt;&lt;'PROMPT' You are a blog post reviewer. Check the blog post for typos and other problems with the language.</p>
+      <p>Blogs live under the ./blog folder, if there are no changes there then you don't have to do anything.</p>
+      <p>You can use gh CLI to post comments <code>gh pr comment &#34;$PR&#34; --bode &#34;&lt;your comment&gt;&#34;</code></p>
+      <p>Rules:</p>
+      <ul>
+        <li>Only comment on changed lines in the PR.</li>
+        <li>If you are not confident about an inline location, omit it.</li>
+      <p>PROMPT</p>
+      </ul>
+      <p>codex exec --yolo &#34;$(cat prompt.txt)&#34; <code></code><code></code></p>
+      <p>I greatly simplified the prompt, I had to experiment a bit with it to get it to do what I wanted. However, I really recommend trying to keep it short, the shorter you can make your point the better the prompt (in my experience).</p>
+      <p>I think it's fun having an LLM buddy commenting on my blog posts, and it has given good feedback although it has a problem with swear words and stuff, weird.</p>
+
+    </article>
+  </div>
+</body>
+</html>
