@@ -276,6 +276,19 @@ func parseFrontMatter(lines []string) (frontMatter, error) {
 	return fm, nil
 }
 
+func parseFootnoteDef(trimmed string) (id, text string, ok bool) {
+	if !strings.HasPrefix(trimmed, "[^") {
+		return "", "", false
+	}
+	end := strings.Index(trimmed[2:], "]:")
+	if end < 0 {
+		return "", "", false
+	}
+	id = trimmed[2 : 2+end]
+	text = strings.TrimSpace(trimmed[2+end+2:])
+	return id, text, true
+}
+
 func markdownToHTML(md string) (template.HTML, string, string) {
 	lines := strings.Split(md, "\n")
 	var builder strings.Builder
@@ -283,10 +296,24 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	var firstParagraph string
 	var title string
 	inList := false
+	inBlockquote := false
+	var blockquoteLines []string
 	inCodeBlock := false
 	var codeLines []string
 	var codeLang string
 	const blockIndent = "      "
+
+	// Pre-collect footnote definitions in order of appearance.
+	footnotes := map[string]string{}
+	var footnoteOrder []string
+	for _, line := range lines {
+		if id, text, ok := parseFootnoteDef(strings.TrimSpace(line)); ok {
+			if _, exists := footnotes[id]; !exists {
+				footnoteOrder = append(footnoteOrder, id)
+			}
+			footnotes[id] = text
+		}
+	}
 
 	flushParagraph := func() {
 		if len(paragraph) == 0 {
@@ -330,6 +357,19 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 		}
 	}
 
+	flushBlockquote := func() {
+		if !inBlockquote {
+			return
+		}
+		raw := strings.Join(blockquoteLines, " ")
+		builder.WriteString(blockIndent)
+		builder.WriteString("<blockquote><p>")
+		builder.WriteString(renderInline(raw))
+		builder.WriteString("</p></blockquote>\n")
+		inBlockquote = false
+		blockquoteLines = nil
+	}
+
 	for _, line := range lines {
 		line = strings.TrimRight(line, " \t")
 		trimmed := strings.TrimSpace(line)
@@ -338,6 +378,7 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 				flushCodeBlock()
 			} else {
 				flushParagraph()
+				flushBlockquote()
 				closeList()
 				inCodeBlock = true
 				codeLang = strings.TrimSpace(strings.TrimPrefix(trimmed, "```"))
@@ -352,6 +393,7 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 
 		if trimmed == "" {
 			flushParagraph()
+			flushBlockquote()
 			closeList()
 			continue
 		}
@@ -360,6 +402,7 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 			level := headingLevel(trimmed)
 			if level > 0 {
 				flushParagraph()
+				flushBlockquote()
 				closeList()
 				text := strings.TrimSpace(trimmed[level:])
 				if level == 1 && title == "" {
@@ -371,8 +414,17 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 			}
 		}
 
+		if strings.HasPrefix(trimmed, "> ") || trimmed == ">" {
+			flushParagraph()
+			closeList()
+			inBlockquote = true
+			blockquoteLines = append(blockquoteLines, strings.TrimSpace(strings.TrimPrefix(trimmed, ">")))
+			continue
+		}
+
 		if strings.HasPrefix(trimmed, "- ") {
 			flushParagraph()
+			flushBlockquote()
 			if !inList {
 				builder.WriteString(blockIndent)
 				builder.WriteString("<ul>\n")
@@ -385,12 +437,32 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 			continue
 		}
 
+		if _, _, ok := parseFootnoteDef(trimmed); ok {
+			flushParagraph()
+			flushBlockquote()
+			continue
+		}
+
+		flushBlockquote()
 		paragraph = append(paragraph, trimmed)
 	}
 
 	flushParagraph()
+	flushBlockquote()
 	closeList()
 	flushCodeBlock()
+
+	if len(footnoteOrder) > 0 {
+		builder.WriteString(blockIndent + "<section class=\"footnotes\">\n")
+		builder.WriteString(blockIndent + "  <ol>\n")
+		for _, id := range footnoteOrder {
+			builder.WriteString(blockIndent + "    <li id=\"fn-" + html.EscapeString(id) + "\">")
+			builder.WriteString(renderInline(footnotes[id]))
+			builder.WriteString("</li>\n")
+		}
+		builder.WriteString(blockIndent + "  </ol>\n")
+		builder.WriteString(blockIndent + "</section>\n")
+	}
 
 	return template.HTML(builder.String()), strings.TrimSpace(firstParagraph), strings.TrimSpace(title)
 }
@@ -449,7 +521,38 @@ func renderInline(input string) string {
 				emit("<code>")
 			}
 			i++
+		case input[i] == '!' && i+1 < len(input) && input[i+1] == '[':
+			// Image: ![alt](url)
+			endAlt := strings.IndexByte(input[i+2:], ']')
+			if endAlt >= 0 && i+2+endAlt+1 < len(input) && input[i+2+endAlt+1] == '(' {
+				endURL := strings.IndexByte(input[i+2+endAlt+2:], ')')
+				if endURL >= 0 {
+					alt := input[i+2 : i+2+endAlt]
+					url := input[i+2+endAlt+2 : i+2+endAlt+2+endURL]
+					emit(`<img src="`)
+					emit(html.EscapeString(url))
+					emit(`" alt="`)
+					emit(escapeText(alt))
+					emit(`">`)
+					i += 2 + endAlt + 2 + endURL + 1
+					continue
+				}
+			}
+			fallthrough
 		case input[i] == '[':
+			// Footnote reference [^id]
+			if i+1 < len(input) && input[i+1] == '^' {
+				if end := strings.IndexByte(input[i+2:], ']'); end >= 0 {
+					id := input[i+2 : i+2+end]
+					emit(`<sup><a href="#fn-`)
+					emit(html.EscapeString(id))
+					emit(`">`)
+					emit(escapeText(id))
+					emit(`</a></sup>`)
+					i += 2 + end + 1
+					continue
+				}
+			}
 			endText := strings.IndexByte(input[i:], ']')
 			if endText > 0 && i+endText+1 < len(input) && input[i+endText+1] == '(' {
 				endURL := strings.IndexByte(input[i+endText+2:], ')')
@@ -488,6 +591,27 @@ func renderInline(input string) string {
 }
 
 func stripInline(s string) string {
+	// Strip markdown links [text](url) -> text
+	for {
+		start := strings.IndexByte(s, '[')
+		if start == -1 {
+			break
+		}
+		end := strings.IndexByte(s[start:], ']')
+		if end < 0 {
+			break
+		}
+		end += start
+		if end+1 < len(s) && s[end+1] == '(' {
+			urlEnd := strings.IndexByte(s[end+2:], ')')
+			if urlEnd >= 0 {
+				text := s[start+1 : end]
+				s = s[:start] + text + s[end+2+urlEnd+1:]
+				continue
+			}
+		}
+		break
+	}
 	replacer := strings.NewReplacer("**", "", "__", "", "*", "", "_", "", "`", "")
 	return replacer.Replace(s)
 }
