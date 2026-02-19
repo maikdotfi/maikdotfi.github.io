@@ -591,6 +591,26 @@ func renderInline(input string) string {
 }
 
 func stripInline(s string) string {
+	// Strip markdown images ![alt](url) -> (removed entirely)
+	for {
+		start := strings.Index(s, "![")
+		if start == -1 {
+			break
+		}
+		end := strings.IndexByte(s[start+2:], ']')
+		if end < 0 {
+			break
+		}
+		end += start + 2
+		if end+1 < len(s) && s[end+1] == '(' {
+			urlEnd := strings.IndexByte(s[end+2:], ')')
+			if urlEnd >= 0 {
+				s = strings.TrimSpace(s[:start] + s[end+2+urlEnd+1:])
+				continue
+			}
+		}
+		break
+	}
 	// Strip markdown links [text](url) -> text
 	for {
 		start := strings.IndexByte(s, '[')

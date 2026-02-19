@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Python is great although it sucks | maik.fi</title>
+  <title>TDD is back baby! | maik.fi</title>
   <link rel="icon" href="../favicon.ico">
   <style>
     :root {
@@ -223,21 +223,35 @@
     </nav>
     <article>
       <header>
-        <h1>Python is great although it sucks</h1>
+        <h1>TDD is back baby!</h1>
         <p class="meta">
-          <time datetime="2025-11-22">November 22, 2025</time> · by Mike
+          <time datetime="2026-02-19">February 19, 2026</time> · by Mike
         </p>
         <div class="tags">
-          <span class="tag">python</span>
-          <span class="tag">fun</span>
+          <span class="tag">tdd</span>
+          <span class="tag">agentic coding</span>
+          <span class="tag">llms</span>
         </div>
       </header>
-      <p>I've been writing Python again and to my surprise, I've been enjoying it a lot! For the most part.</p>
-      <p>What I really enjoy in Python is the actual writing and how concise, yet expressive, the language can be at the same time (I can't explain it, but the syntax just feels natural after a while). Of course this does depend on how you write it to a degree. One of the weaknesses I've seen with Python is that people write really shit code in Python. That's not Python's fault directly, but Python sure does allow/encourage some stuff I think should be straight up illegal, like awful one-liner syntax that some people consider <em>elegant</em>. Fuck me.</p>
-      <p>However, my main issue with Python is that it sucks ass the second you want to actually run it someplace other than your laptop. Coming back to Python from working mostly with Go, it's easy to see the appeal in the static binaries and cross-compilation that Go has. (of course Go isn't perfect either).</p>
-      <h2>B-b-but uv!</h2>
-      <p>I know somebody reading this already thought to themselves &#34;man, uv solves that, stop bitching&#34;. Yeaah, I mean it helps. If you are in an environment homogeneous hardware, no network limitations and fast connectivity too, then <code>uv</code> probably does fix Python packaging and runtime challenges quite neatly. I agree. But when you are dealing with different architectures (x86, arm64) and with different operating systems (Linux, macOS, even fucking Windows) AND you cannot just download bunch of shit from the internet... Python sucks, not Python the language, but the experience after writing the code.</p>
-      <p>Overall Python can be pretty fun, and I had some fun writing it after a long break of not writing more than a few lines here and there for years. I find Python often perfect for scripting because it's available by default and with AI you can easily get by with just stdlib and it's easy to read!</p>
+      <p><img src="./04.jpg" alt="image"></p>
+      <p>Sorry for the AI slop image, but I thought Chatgippity captured my thoughts pretty well with this one.</p>
+      <p>Reading the <a href="https://www.thoughtworks.com/content/dam/thoughtworks/documents/report/tw_future%20_of_software_development_retreat_%20key_takeaways.pdf">report from The future of software engineering retreat</a> I was reminded that I've been meaning to write about TDD when vibe coding. The retreat report mentions:</p>
+      <blockquote><p>TDD as the strongest form of prompt engineering</p></blockquote>
+      <p>If you don't know it by now, testing is how you get LLMs to build working software. Sometimes it's not just your actual test cases, but it's also the compiler and even just instructions to the <em>machine</em> (via Claude Code or Codex or whatever). Without a feedback loop you are fucked and wasting time and tokens.</p>
+      <h2>You said something about TDD</h2>
+      <p>Yeah, TDD, Test Driven Development is an awesome design practice. If your code is hard to test, it's probably shit code and not maintainable. Also code that does not have tests is legacy code<sup><a href="#fn-1">1</a></sup> so testing is important if you want to enable changing (maintaining) software. This fact does not change whether you are coding by hand or vibe coding.</p>
+      <p>The problem with TDD though is that it is quite expensive. When I'm writing code in TDD style it takes a lot longer, but the code becomes much better. Well, perhaps an exception to the rule is when you are writing something quite complicated and it's just worth testing it in small iterations to see if it comes out correctly bit by bit. But for &#34;trivial&#34;/bulk code it is pretty slow often to write purely in TDD fashion, or maybe I'm just shit at coding (I am).</p>
+      <p>Why is TDD back then? Well obviously Claude Code can write tests quickly, BUT! Claude Code is also a fucker that writes shitty tests. It likes to test the implementation, not the behaviour, like a total newb. I haven't yet tested this much but I find that reading and contributing to the tests is really the best use of my time when vibe coding something. I still don't really write all the test cases, I've been almost pseudocoding and then letting the LLM do the hard work, it gets it right when you tell it what to test and a bit how to so it doesn't create stupid mocks everywhere.</p>
+      <h2>Write the test first</h2>
+      <p>Ok, so the important thing with TDD is to write the test first. And this is my point with agentic coding workflow too, you progress quicker if you just write the tests first because often YOU haven't thought of something yet, and by pseudocoding on the tests you are exploring the solution as well. The thing is, if you don't tell the LLM a thing, it won't code up the thing. Sure, sometimes Claude will figure out some small things you forgot to mention, but when it comes to your features it won't really &#34;fill in the blanks&#34;. The fucker won't even ask you about obvious gaps.</p>
+      <h2>Beyond unit tests</h2>
+      <p>One example that Claude seems to get wrong currently is e2e backend and frontend work. In a backend-driven application, I still found that I have to tell Claude to add things to the UI as well or it won't consistently do it. In my experience testing frontend has always been too much work, but maybe it's not if I don't write the tests? This is what I will start experimenting with this project I've been vibing on. Because I think it's actually <em>slowing</em> the development that the frontend doesn't have tests and I cannot make a test specification that includes e2e flows.</p>
+      <p>I think this will go beyond unit tests, and even TDD, what I have been thinking is state machines (also mentioned in the retreat report) as a way of having some shared ground and understanding of the project between me and the machine. Because I sure as hell ain't gonna read all that code. Honestly, I don't even know the programming language!</p>
+      <section class="footnotes">
+        <ol>
+          <li id="fn-1">Author of &#34;Working Effectively With Legacy Code&#34;, Michael Feathers defines Legacy Code like so: &#34;To me, legacy code is simply code without tests.&#34;</li>
+        </ol>
+      </section>
 
     </article>
   </div>
