@@ -522,18 +522,30 @@ func renderInline(input string) string {
 			}
 			i++
 		case input[i] == '!' && i+1 < len(input) && input[i+1] == '[':
-			// Image: ![alt](url)
+			// Image: ![alt](url) or ![alt|size](url)
 			endAlt := strings.IndexByte(input[i+2:], ']')
 			if endAlt >= 0 && i+2+endAlt+1 < len(input) && input[i+2+endAlt+1] == '(' {
 				endURL := strings.IndexByte(input[i+2+endAlt+2:], ')')
 				if endURL >= 0 {
-					alt := input[i+2 : i+2+endAlt]
+					altRaw := input[i+2 : i+2+endAlt]
 					url := input[i+2+endAlt+2 : i+2+endAlt+2+endURL]
+					alt := altRaw
+					var sizeClass string
+					if pipe := strings.LastIndex(altRaw, "|"); pipe >= 0 {
+						alt = altRaw[:pipe]
+						sizeClass = strings.TrimSpace(altRaw[pipe+1:])
+					}
 					emit(`<img src="`)
 					emit(html.EscapeString(url))
 					emit(`" alt="`)
 					emit(escapeText(alt))
-					emit(`">`)
+					emit(`"`)
+					if sizeClass != "" {
+						emit(` class="img-`)
+						emit(html.EscapeString(sizeClass))
+						emit(`"`)
+					}
+					emit(`>`)
 					i += 2 + endAlt + 2 + endURL + 1
 					continue
 				}

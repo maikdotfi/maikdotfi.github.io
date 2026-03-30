@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The Cloud is Bullshit | maik.fi</title>
+  <title>Feedback Loops | maik.fi</title>
   <link rel="icon" href="../favicon.ico">
   <style>
     :root {
@@ -250,22 +250,27 @@
     </nav>
     <article>
       <header>
-        <h1>The Cloud is Bullshit</h1>
+        <h1>Feedback Loops</h1>
         <p class="meta">
-          <time datetime="2025-08-23">August 23, 2025</time> · by Mike
+          <time datetime="2026-02-19">February 19, 2026</time> · by Mike
         </p>
         <div class="tags">
-          <span class="tag">cloud</span>
-          <span class="tag">bullshit</span>
+          <span class="tag">continuous delivery</span>
+          <span class="tag">agentic coding</span>
+          <span class="tag">llms</span>
         </div>
       </header>
-      <p>I have been working in a greenfield project at a client in a completely new context for me. As usual, I have been doing some IaC and whatnot to deploy our stuff into the <em>Cloud</em> as usual.</p>
-      <p>While setting the infrastructure up I (again) realised how much effort I spent on things that have absolutely 0 value to the organisation, to the business. It's just bullshit. Why am I spending all this time fiddling with the IaC, struggling with the API, the shit documentation etc.</p>
-      <p>I guess the cloud started with just VMs (Elastic Compute) and some simple services on the side that you can run without worrying about <strong>hardware</strong>, but it sure as fuck has stayed that way too. By now I would have hoped that all this infrastructure BS would be handled for me, I would be able to focus on shipping the software instead of fiddling with all the knobs of the infrastructure endlessly.</p>
-      <p>In the olden days we would setup a server, install a LAMP stack of whatever and get the software up and running. If we were really advanced we would setup some Jenkins pipelines to package and deploy stuff. The Jenkins could have been running on an old company laptop at a colleagues desk (if this sounds bit too detailed, that's because it's a true story).</p>
-      <p>The real difference here is that the activities from the olden days are what I would consider the <em>essential</em> complexity of the task, but in the Cloud I feel too much time is spent on managing <em>accidental</em> complexity. Of course the shape of the software architecture is often also different in these Cloud deployments and it enables <strong>some</strong> teams to solve genuine scaling challenges, but adds accidental complexity to most. Good example is that teams <em>must</em> deploy to a Kubernetes service in the Cloud, while they could be just using a higher level abstraction happily (and migrate to another if that is truly needed one day).</p>
-      <p>Of course fiddling the knobs of cloud infrastructure has kept food on the table for quite some years, but it's still bullshit.</p>
-      <p>/rant</p>
+      <p><img src="./feedback-loops.jpg" alt="feedback loops meme" class="img-wide"></p>
+      <h2>Story Time</h2>
+      <p>I was working one day and came across an issue, and of course, it involved Kubernetes. The problem was configuration really. I was installing a common service lots of people use in Kubernetes environments, nothing exotic. To avoid causing small outages during upgrades we had decided to run it in a highly available manner. Due to reasons related to open source and rug pulling, the HA installation method was slightly broken when I started the work with the task. I actually got it working at first, but then I had to do some things like, actually make it secure, and that is when it broke.</p>
+      <p>I was diagnosing it first myself and fixed couple fairly obvious issues, but still no dice. Although my focus was also partially in other things, this probably took couple hours all in all, so not exactly fast progress. That's when I thought why am I fixing this myself? Let an agent handle it.</p>
+      <p>Problem was that I was working in a setting where I cannot let a coding agent like Claude Code touch the actual cluster I'm targeting. Instead, I setup a local Kind cluster on another machine and got the latest configuration there for an installation. I told Claude Code to bring up the service and fix the issues I was observing. 10 to 20 minutes later the issue was solved while my focus on was on other urgent matters.</p>
+      <p>Now if you are familiar with fixing issues using chat based LLMs, like copy-pasting between ChatGPT in your browser and your IDE/text editor. You might think I still have to test the fix. But if you were reading closely you would know that I setup a cluster, and I had Claude Code working with a real cluster (well, a Kind cluster, but good enough). I told Claude to verify the work and not bother me until it was done with this. Typically with application code Claude Code will not ask you stupid questions and works in a closed loop until done, but with work that involves infrastructure I find I will have to prompt it often to really &#34;close the loop&#34; and verify the changes.</p>
+      <p>And sure enough, with this <strong>feedback loop</strong> Claude Code fixed the issues rather quickly and verified it works. When I moved the code to the real environment, it still worked.</p>
+      <h2>So about those loops</h2>
+      <p>Well, this wasn't really a novel observation that we need a feedback loop. I've seen it mentioned over and over again lately. For example the <a href="https://nonstructured.com/zen-of-ai-coding/">Zen of AI Coding</a> mentions tight feedback loops as one of the 16 <em>things</em>. What really amazes me though is that feedback loops is really the core thing in DevOps. I'm sure you have seen the &#34;DevOps infinity loop&#34; more than a handful of times if you have paid any attention to the DevOps movement in past 10+ years.</p>
+      <p>For over a decade we have known that tight feedback loops are important and still the Zen of AI Coding must include that? I found it a bit funny. Of course I have a horse in the race, because I've defined DevOps in terms of feedback for a long time. To me that is really the impact of DevOps done right. The shared understanding and the sense of ownership and accomplishment when building software, amongst other things of course.</p>
+      <p>With LLMs we need these loops more than ever, because they can remove so much more toil than previously possible. That is exciting to me; removing toil. Like this problem with installing a common service, I don't want to deal with that in future. I would have lots more to say about this topic, but let's leave it for future posts.</p>
 
     </article>
   </div>

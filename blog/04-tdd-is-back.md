@@ -8,7 +8,7 @@ tags:
 date: 2026-02-19
 ---
 
-![image](./04.jpg)
+![image|medium](./04.jpg)
 
 # TDD is back baby!
 

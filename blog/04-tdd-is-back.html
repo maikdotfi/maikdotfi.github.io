@@ -189,6 +189,18 @@
       display: block;
     }
 
+    article img.img-small {
+      max-width: 30%;
+    }
+
+    article img.img-wide {
+      max-width: 80%;
+    }
+
+    article img.img-full {
+      max-width: 100%;
+    }
+
     article blockquote {
       border-left: 3px solid var(--accent);
       margin: 1.5rem 0;
@@ -248,7 +260,7 @@
           <span class="tag">llms</span>
         </div>
       </header>
-      <p><img src="./04.jpg" alt="image"></p>
+      <p><img src="./04.jpg" alt="image" class="img-medium"></p>
       <p>Sorry for the AI slop image, but I thought Chatgippity captured my thoughts pretty well with this one.</p>
       <p>Reading the <a href="https://www.thoughtworks.com/content/dam/thoughtworks/documents/report/tw_future%20_of_software_development_retreat_%20key_takeaways.pdf">report from The future of software engineering retreat</a> I was reminded that I've been meaning to write about TDD when vibe coding. The retreat report mentions:</p>
       <blockquote><p>TDD as the strongest form of prompt engineering</p></blockquote>
