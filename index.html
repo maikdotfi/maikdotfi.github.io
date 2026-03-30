@@ -25,15 +25,85 @@
             font-family: "Inter", "Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background: radial-gradient(circle at top, rgba(0, 122, 255, 0.15), transparent 55%), #0f172a;
             color: #e2e8f0;
+            overflow: hidden;
         }
         main {
             text-align: center;
         }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 0.75rem;
-            letter-spacing: 0.04em;
+        .logo {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            user-select: none;
         }
+        .logo .small {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            line-height: 1;
+        }
+        .logo .big {
+            font-size: 12rem;
+            font-weight: 900;
+            line-height: 0.85;
+            position: relative;
+            background: linear-gradient(
+                135deg,
+                #38bdf8 0%,
+                #818cf8 25%,
+                #f472b6 50%,
+                #38bdf8 75%,
+                #818cf8 100%
+            );
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 4s ease infinite;
+            filter: drop-shadow(0 0 40px rgba(56, 189, 248, 0.4))
+                    drop-shadow(0 0 80px rgba(129, 140, 248, 0.2));
+        }
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* sparkles */
+        .sparkle-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: visible;
+        }
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            animation: sparkle-pop 2.4s ease-in-out infinite;
+            box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.8),
+                        0 0 12px 4px rgba(56, 189, 248, 0.5);
+        }
+        .sparkle:nth-child(1) { top: 8%; left: 10%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 2%; left: 55%; animation-delay: 0.5s; }
+        .sparkle:nth-child(3) { top: 70%; left: 85%; animation-delay: 1.0s; }
+        .sparkle:nth-child(4) { top: 15%; left: 90%; animation-delay: 1.5s; }
+        .sparkle:nth-child(5) { top: 80%; left: 20%; animation-delay: 0.3s; }
+        .sparkle:nth-child(6) { top: 45%; left: 5%; animation-delay: 1.8s; }
+        .sparkle:nth-child(7) { top: 55%; left: 95%; animation-delay: 0.7s; }
+        .sparkle:nth-child(8) { top: 5%; left: 75%; animation-delay: 2.0s; }
+        @keyframes sparkle-pop {
+            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.4) rotate(180deg); }
+        }
+
+        .big-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
         p {
             margin: 0 0 1.5rem;
             color: rgba(226, 232, 240, 0.75);
@@ -76,8 +146,23 @@
 
 <body>
     <main>
-        <h1>Big refresh underway</h1>
-        <p>I have no fucking clue what to put on the landing page, but you can check this shit out:</p>
+        <div class="logo">
+            <span class="small">m</span>
+            <div class="big-wrapper">
+                <span class="big">AI</span>
+                <div class="sparkle-container">
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                </div>
+            </div>
+            <span class="small">k</span>
+        </div>
         <div class="links">
             <a href="blog/index.html">Read the blog</a>
             <a class="secondary" href="cv/index.html" rel="noopener">Skim the CV</a>
