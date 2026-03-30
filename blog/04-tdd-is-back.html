@@ -10,17 +10,24 @@
       color-scheme: light dark;
       --bg: #f6f7fb;
       --fg: #0f141e;
-      --accent: #1c64f2;
+      --accent: #15803d;
+      --accent-bright: #22c55e;
       --muted: #6b7280;
+      --tag-bg: #dcfce7;
+      --tag-fg: #14532d;
       --border: color-mix(in srgb, var(--muted) 25%, transparent);
       font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f141e;
+        --bg: #0a0f0a;
         --fg: #f8fafc;
+        --accent: #22c55e;
+        --accent-bright: #4ade80;
         --muted: #94a3b8;
+        --tag-bg: #14532d;
+        --tag-fg: #bbf7d0;
         --border: color-mix(in srgb, var(--muted) 40%, transparent);
       }
     }
@@ -28,15 +35,23 @@
     :root[data-theme="light"] {
       --bg: #f6f7fb;
       --fg: #0f141e;
+      --accent: #15803d;
+      --accent-bright: #22c55e;
       --muted: #6b7280;
+      --tag-bg: #dcfce7;
+      --tag-fg: #14532d;
       --border: color-mix(in srgb, var(--muted) 25%, transparent);
       color-scheme: light;
     }
 
     :root[data-theme="dark"] {
-      --bg: #0f141e;
+      --bg: #0a0f0a;
       --fg: #f8fafc;
+      --accent: #22c55e;
+      --accent-bright: #4ade80;
       --muted: #94a3b8;
+      --tag-bg: #14532d;
+      --tag-fg: #bbf7d0;
       --border: color-mix(in srgb, var(--muted) 40%, transparent);
       color-scheme: dark;
     }
@@ -128,8 +143,8 @@
     }
 
     .tag {
-      background: color-mix(in srgb, var(--accent) 15%, transparent);
-      color: var(--accent);
+      background: var(--tag-bg);
+      color: var(--tag-fg);
       border-radius: 999px;
       padding: 0.15rem 0.65rem;
       font-size: 0.85rem;
