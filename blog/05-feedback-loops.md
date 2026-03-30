@@ -5,7 +5,7 @@ tags:
 - continuous delivery
 - agentic coding
 - llms
-date: 2026-02-19
+date: 2026-03-30
 ---
 
 ![feedback loops meme|wide](./feedback-loops.jpg)
