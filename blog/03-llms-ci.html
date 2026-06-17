@@ -5,238 +5,319 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LLMs in your CI can be awesome | maik.fi</title>
   <link rel="icon" href="../favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       color-scheme: light dark;
-      --bg: #f6f7fb;
-      --fg: #0f141e;
-      --accent: #15803d;
-      --accent-bright: #22c55e;
-      --muted: #6b7280;
-      --tag-bg: #dcfce7;
-      --tag-fg: #14532d;
-      --border: color-mix(in srgb, var(--muted) 25%, transparent);
-      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      --bg: #f4f1ea;
+      --bg-tint: #ece7dc;
+      --fg: #1c1a16;
+      --muted-fg: #756f63;
+      --accent: #b14a26;
+      --rule: #d8d2c4;
+      --code-bg: #ebe6da;
+      --display: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0a0f0a;
-        --fg: #f8fafc;
-        --accent: #22c55e;
-        --accent-bright: #4ade80;
-        --muted: #94a3b8;
-        --tag-bg: #14532d;
-        --tag-fg: #bbf7d0;
-        --border: color-mix(in srgb, var(--muted) 40%, transparent);
+        --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+        --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+        --code-bg: #1b1b16;
       }
     }
 
     :root[data-theme="light"] {
-      --bg: #f6f7fb;
-      --fg: #0f141e;
-      --accent: #15803d;
-      --accent-bright: #22c55e;
-      --muted: #6b7280;
-      --tag-bg: #dcfce7;
-      --tag-fg: #14532d;
-      --border: color-mix(in srgb, var(--muted) 25%, transparent);
+      --bg: #f4f1ea; --bg-tint: #ece7dc; --fg: #1c1a16;
+      --muted-fg: #756f63; --accent: #b14a26; --rule: #d8d2c4;
+      --code-bg: #ebe6da;
       color-scheme: light;
     }
 
     :root[data-theme="dark"] {
-      --bg: #0a0f0a;
-      --fg: #f8fafc;
-      --accent: #22c55e;
-      --accent-bright: #4ade80;
-      --muted: #94a3b8;
-      --tag-bg: #14532d;
-      --tag-fg: #bbf7d0;
-      --border: color-mix(in srgb, var(--muted) 40%, transparent);
+      --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+      --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+      --code-bg: #1b1b16;
       color-scheme: dark;
     }
+
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
       color: var(--fg);
+      font-family: var(--body);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     .wrap {
-      max-width: 720px;
+      max-width: 50rem;
       margin: 0 auto;
-      padding: 3rem 1.5rem 4rem;
+      padding: clamp(2rem, 5vw, 3.5rem) 1.6rem 6rem;
     }
 
+     
     nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
     }
 
+    .nav-links { display: flex; gap: 1.5rem; align-items: baseline; }
+
     nav a {
-      color: inherit;
+      color: var(--fg);
       text-decoration: none;
-      font-weight: 600;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      transition: color 180ms ease;
     }
 
     nav a:hover,
-    nav a:focus {
-      color: var(--accent);
-      text-decoration: underline;
-    }
+    nav a:focus-visible { color: var(--accent); }
 
     .theme-toggle {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 2.75rem;
-      height: 2.75rem;
-      border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: none;
       background: none;
-      color: inherit;
+      color: var(--muted-fg);
       cursor: pointer;
-      transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+      transition: color 180ms ease, transform 300ms ease;
     }
 
-    .theme-toggle svg {
-      width: 1.4rem;
-      height: 1.4rem;
-    }
-
+    .theme-toggle svg { width: 1.6rem; height: 1.6rem; }
     .theme-toggle:hover,
-    .theme-toggle:focus-visible {
-      background: color-mix(in srgb, var(--bg) 70%, var(--accent) 30%);
-      border-color: color-mix(in srgb, var(--accent) 35%, transparent);
-      color: var(--accent);
-    }
+    .theme-toggle:focus-visible { color: var(--accent); transform: rotate(-12deg); }
+    .theme-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
 
-    .theme-toggle:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
+     
+    article { margin-top: clamp(3rem, 7vw, 5rem); }
 
-    article {
-      margin-top: 2.5rem;
+    article > header {
+      margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
     }
 
     h1 {
-      font-size: clamp(2.3rem, 4.5vw, 3.2rem);
-      margin: 0 0 0.5rem;
-      letter-spacing: -0.035em;
+      font-family: var(--display);
+      font-weight: 750;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.2rem;
+      max-width: 18ch;
     }
 
     .meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
       margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
     }
 
     .tags {
-      display: inline-flex;
-      gap: 0.35rem;
-      flex-wrap: wrap;
-      margin-top: 0.65rem;
-    }
-
-    .tag {
-      background: var(--tag-bg);
-      color: var(--tag-fg);
-      border-radius: 999px;
-      padding: 0.15rem 0.65rem;
-      font-size: 0.85rem;
+      margin-top: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 600;
+      color: var(--accent);
     }
 
-    article p {
-      line-height: 1.7;
-      font-size: 1.05rem;
-      margin: 1.3rem 0;
+    .tag::before { content: "#"; opacity: 0.45; margin-right: 0.15em; }
+
+     
+    article > p,
+    article > ul,
+    article > blockquote,
+    article > pre,
+    article > h2,
+    article > h3,
+    article > h4 {
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: 120ms;
+    }
+
+    article p { margin: 1.4rem 0; }
+
+    article > p:first-of-type { margin-top: 0; }
+
+    article > p:first-of-type::first-letter {
+      font-family: var(--display);
+      font-weight: 750;
+      float: left;
+      font-size: 3.8rem;
+      line-height: 0.78;
+      padding: 0.05em 0.1em 0 0;
+      color: var(--accent);
+    }
+
+    h2, h3, h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 2.6rem 0 0.9rem;
+    }
+
+    h2 { font-size: 1.65rem; }
+    h3 { font-size: 1.3rem; }
+    h4 { font-size: 1.1rem; }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: 100% 1px;
+      background-position: 0 1.15em;
+      background-repeat: no-repeat;
+      transition: background-position 160ms ease, opacity 160ms ease;
+    }
+
+    a:hover,
+    a:focus-visible { opacity: 0.7; }
+
+    article ul {
+      margin: 1.4rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    article li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin: 0.5rem 0;
+    }
+
+    article li::before {
+      content: "";
+      position: absolute;
+      left: 0.1rem;
+      top: 0.72em;
+      width: 0.4rem;
+      height: 1px;
+      background: var(--accent);
     }
 
     article pre {
-      background: color-mix(in srgb, var(--fg) 6%, var(--bg));
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1.2rem;
+      background: var(--code-bg);
+      border: none;
+      border-left: 2px solid var(--accent);
+      border-radius: 0;
+      padding: 1.2rem 1.3rem;
       overflow-x: auto;
       line-height: 1.6;
-      font-size: 0.95rem;
-      margin: 1.5rem 0;
+      font-size: 0.86rem;
+      margin: 1.8rem 0;
     }
 
-    article code {
-      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-      font-size: 0.95em;
+    code {
+      font-family: var(--mono);
+      font-size: 0.86em;
     }
 
-    article p code {
-      background: color-mix(in srgb, var(--fg) 8%, transparent);
-      border-radius: 6px;
-      padding: 0.1rem 0.35rem;
+    article p code,
+    article li code {
+      background: var(--code-bg);
+      padding: 0.12rem 0.4rem;
+      border-radius: 0;
     }
 
     article img {
       max-width: 50%;
       height: auto;
-      border-radius: 12px;
-      margin: 1.5rem auto;
+      border-radius: 0;
+      margin: 2rem auto;
       display: block;
     }
 
-    article img.img-small {
-      max-width: 30%;
-    }
-
-    article img.img-wide {
-      max-width: 80%;
-    }
-
-    article img.img-full {
-      max-width: 100%;
-    }
+    article img.img-small { max-width: 30%; }
+    article img.img-wide { max-width: 80%; }
+    article img.img-full { max-width: 100%; }
 
     article blockquote {
-      border-left: 3px solid var(--accent);
-      margin: 1.5rem 0;
-      padding: 0.4rem 1.1rem;
-      color: var(--muted);
+      margin: 2rem 0;
+      padding: 0 0 0 2.2rem;
+      position: relative;
+      font-family: var(--display);
       font-style: italic;
+      font-weight: 400;
+      font-size: 1.35rem;
+      line-height: 1.45;
+      color: var(--fg);
     }
 
-    article blockquote p {
-      margin: 0;
+    article blockquote::before {
+      content: "\201C";
+      position: absolute;
+      left: -0.1rem;
+      top: 0.35rem;
+      font-family: var(--display);
+      font-size: 3.4rem;
+      line-height: 1;
+      color: var(--accent);
     }
+
+    article blockquote p { margin: 0; }
 
     .footnotes {
-      border-top: 1px solid var(--border);
-      margin-top: 2.5rem;
-      padding-top: 1rem;
-      font-size: 0.9rem;
-      color: var(--muted);
+      border-top: 1px solid var(--rule);
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      font-size: 0.92rem;
+      color: var(--muted-fg);
     }
 
-    .footnotes ol {
-      margin: 0.5rem 0 0;
-      padding-left: 1.5rem;
+    .footnotes ol { margin: 0; padding-left: 1.3rem; }
+    .footnotes li { line-height: 1.6; margin: 0.4rem 0; }
+
+    sup a { background: none; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .footnotes li {
-      line-height: 1.6;
-      margin: 0.25rem 0;
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <nav>
-      <div>
-        <a href="index.html">← All posts</a> · <a href="../index.html">maik.fi home</a>
+      <div class="nav-links">
+        <a href="index.html">← All writing</a>
+        <a href="../index.html">maik.fi</a>
       </div>
       <button type="button" class="theme-toggle" aria-pressed="false" aria-label="Toggle theme" title="Toggle theme">
         <svg viewBox="0 0 256 256" aria-hidden="true">
@@ -252,11 +333,9 @@
       <header>
         <h1>LLMs in your CI can be awesome</h1>
         <p class="meta">
-          <time datetime="2025-12-30">December 30, 2025</time> · by Mike
+          <time datetime="2025-12-30">December 30, 2025</time> — by Mike
         </p>
-        <div class="tags">
-          <span class="tag">ci</span>
-          <span class="tag">llms</span>
+        <div class="tags"><span class="tag">ci</span><span class="tag">llms</span>
         </div>
       </header>
       <p>Like most people, I'm not convinced that LLMs(/thE Ai) will be replacing software professionals. But, I do find that it's very difficult to know when LLM is a good fit for a task and when you should just do it manually. One place where it feels like a quick and easy, continuous, win is the CI pipeline. Even if that fucker makes some mistakes, it's still sort of &#34;a pair of eyes&#34; to look at your commit.</p>
