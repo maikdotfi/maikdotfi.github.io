@@ -17,7 +17,14 @@
       --muted-fg: #756f63;
       --accent: #b14a26;
       --rule: #d8d2c4;
-      --code-bg: #ebe6da;
+      --code-bg: #ede7d8;
+      --code-border: #dad1bd;
+      --tok-com: #8a8372;
+      --tok-kw: #9c3d1f;
+      --tok-str: #4f6a2e;
+      --tok-num: #8a5a12;
+      --tok-fn: #345b6b;
+      --tok-builtin: #7a4a86;
       --display: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -27,21 +34,27 @@
       :root {
         --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
         --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
-        --code-bg: #1b1b16;
+        --code-bg: #24241c; --code-border: #33332a;
+        --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+        --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
       }
     }
 
     :root[data-theme="light"] {
       --bg: #f4f1ea; --bg-tint: #ece7dc; --fg: #1c1a16;
       --muted-fg: #756f63; --accent: #b14a26; --rule: #d8d2c4;
-      --code-bg: #ebe6da;
+      --code-bg: #ede7d8; --code-border: #dad1bd;
+      --tok-com: #8a8372; --tok-kw: #9c3d1f; --tok-str: #4f6a2e;
+      --tok-num: #8a5a12; --tok-fn: #345b6b; --tok-builtin: #7a4a86;
       color-scheme: light;
     }
 
     :root[data-theme="dark"] {
       --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
       --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
-      --code-bg: #1b1b16;
+      --code-bg: #24241c; --code-border: #33332a;
+      --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+      --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
       color-scheme: dark;
     }
 
@@ -193,6 +206,22 @@
     h3 { font-size: 1.3rem; }
     h4 { font-size: 1.1rem; }
 
+     
+    .heading-anchor {
+      margin-left: 0.35em;
+      color: var(--muted-fg);
+      font-weight: 400;
+      text-decoration: none;
+      background: none;
+      opacity: 0;
+      transition: opacity 160ms ease, color 160ms ease;
+    }
+    h2:hover .heading-anchor,
+    h3:hover .heading-anchor,
+    h4:hover .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 0.65; }
+    .heading-anchor:hover { opacity: 1; color: var(--accent); }
+
     a {
       color: var(--accent);
       text-decoration: none;
@@ -230,13 +259,13 @@
 
     article pre {
       background: var(--code-bg);
-      border: none;
+      border: 1px solid var(--code-border);
       border-left: 2px solid var(--accent);
       border-radius: 0;
       padding: 1.2rem 1.3rem;
       overflow-x: auto;
       line-height: 1.6;
-      font-size: 0.86rem;
+      font-size: 0.95rem;
       margin: 1.8rem 0;
     }
 
@@ -244,6 +273,17 @@
       font-family: var(--mono);
       font-size: 0.86em;
     }
+
+     
+    article pre code { font-size: 1em; }
+
+     
+    article pre .hl-com     { color: var(--tok-com); font-style: italic; }
+    article pre .hl-kw      { color: var(--tok-kw); }
+    article pre .hl-str     { color: var(--tok-str); }
+    article pre .hl-num     { color: var(--tok-num); }
+    article pre .hl-fn      { color: var(--tok-fn); }
+    article pre .hl-builtin { color: var(--tok-builtin); }
 
     article p code,
     article li code {
@@ -339,44 +379,44 @@
         </div>
       </header>
       <p>Like most people, I'm not convinced that LLMs(/thE Ai) will be replacing software professionals. But, I do find that it's very difficult to know when LLM is a good fit for a task and when you should just do it manually. One place where it feels like a quick and easy, continuous, win is the CI pipeline. Even if that fucker makes some mistakes, it's still sort of &#34;a pair of eyes&#34; to look at your commit.</p>
-      <h2>Ollama, let's fucking go</h2>
+      <h2 id="ollama-lets-fucking-go">Ollama, let's fucking go<a class="heading-anchor" href="#ollama-lets-fucking-go" aria-label="Link to this section">#</a></h2>
       <p>To prove my point I've added a simple blog reviewer to my blog repository. It just uses Codex CLI in the pipeline and I've pointed it to Ollama Cloud (becuz free).</p>
       <p>Technically, Codex is a coding agent and not a general purpose &#34;agent CLI&#34; for which you can overwrite the system prompt. It is a way to allow the LLM to use tools (mainly the gh CLI), and do the agent loop. It does inject a system prompt that starts like this:</p>
       <pre><code class="language-text">You are a coding agent running in the Codex CLI, a terminal-based coding assistant</code></pre>
       <p>I found Codex to work fine for the task although it's not exactly coding, but for many other &#34;agents&#34; you might use in your CI coding is probably useful!</p>
       <p>Here's a simplified example of how you would do this in general:</p>
-      <pre><code class="language-yaml">name: Codex PR blog reviewer
+      <pre><code class="language-yaml"><span class="hl-kw">name</span>: Codex PR blog reviewer
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+<span class="hl-kw">on</span>:
+  <span class="hl-kw">pull_request</span>:
+    <span class="hl-kw">types</span>: [opened, synchronize, reopened]
 
-# Strict permissions for the GitHub token (GITHUB_TOKEN)
-permissions:
-  contents: read
-  pull-requests: write
+<span class="hl-com"># Strict permissions for the GitHub token (GITHUB_TOKEN)</span>
+<span class="hl-kw">permissions</span>:
+  <span class="hl-kw">contents</span>: read
+  <span class="hl-kw">pull-requests</span>: write
 
-jobs:
-  codex_review:
-    runs-on: ubuntu-latest
+<span class="hl-kw">jobs</span>:
+  <span class="hl-kw">codex_review</span>:
+    <span class="hl-kw">runs-on</span>: ubuntu-latest
 
-    steps:
-      - name: Checkout PR merge commit
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 1
+    <span class="hl-kw">steps</span>:
+      - <span class="hl-kw">name</span>: Checkout PR merge commit
+        <span class="hl-kw">uses</span>: actions/checkout@v5
+        <span class="hl-kw">with</span>:
+          <span class="hl-kw">fetch-depth</span>: <span class="hl-num">1</span>
 
-      - name: Install Codex CLI
-        run: npm i -g @openai/codex
+      - <span class="hl-kw">name</span>: Install Codex CLI
+        <span class="hl-kw">run</span>: npm i -g @openai/codex
 
-      - name: Run Codex
-        env:
-          OLLAMA_API_KEY: ${{ secrets.CODEX_API_KEY }}
+      - <span class="hl-kw">name</span>: Run Codex
+        <span class="hl-kw">env</span>:
+          <span class="hl-kw">OLLAMA_API_KEY</span>: ${{ secrets.CODEX_API_KEY }}
 
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
+          <span class="hl-kw">PR_NUMBER</span>: ${{ github.event.pull_request.number }}
+          <span class="hl-kw">REPO</span>: ${{ github.repository }}
+          <span class="hl-kw">GH_TOKEN</span>: ${{ github.token }}
+        <span class="hl-kw">run</span>: |<span class="hl-str">
           set -euo pipefail
 
           export CODEX_HOME=&#34;$GITHUB_WORKSPACE/.codex-ci&#34;
@@ -404,7 +444,7 @@ jobs:
           - If you are not confident about an inline location, omit it.
           PROMPT
 
-          codex exec --yolo &#34;$(cat prompt.txt)&#34;</code></pre>
+          codex exec --yolo &#34;$(cat prompt.txt)&#34;</span></code></pre>
       <p>I greatly simplified the prompt, I had to experiment a bit with it to get it to do what I wanted. However, I really recommend trying to keep it short, the shorter you can make your point the better the prompt (in my experience).</p>
       <p>I think it's fun having an LLM buddy commenting on my blog posts, and it has given good feedback although it has a problem with swear words occasionally. Weird.</p>
 

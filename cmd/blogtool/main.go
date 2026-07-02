@@ -15,6 +15,10 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
+
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/lexers"
 )
 
 type post struct {
@@ -301,6 +305,8 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	inCodeBlock := false
 	var codeLines []string
 	var codeLang string
+	codeFence := 0
+	slugCounts := map[string]int{}
 	const blockIndent = "      "
 
 	// Pre-collect footnote definitions in order of appearance.
@@ -342,11 +348,12 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 			builder.WriteString(`"`)
 		}
 		builder.WriteString(">")
-		builder.WriteString(escapeText(strings.Join(codeLines, "\n")))
+		builder.WriteString(highlightCode(strings.Join(codeLines, "\n"), codeLang))
 		builder.WriteString("</code></pre>\n")
 		inCodeBlock = false
 		codeLines = nil
 		codeLang = ""
+		codeFence = 0
 	}
 
 	closeList := func() {
@@ -373,21 +380,27 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	for _, line := range lines {
 		line = strings.TrimRight(line, " \t")
 		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "```") {
-			if inCodeBlock {
+
+		if inCodeBlock {
+			// A closing fence is a bare run of backticks (no info string)
+			// at least as long as the opening fence. Anything else — including
+			// shorter or info-bearing fences — is treated as block content,
+			// which lets us nest fenced blocks (outer fence uses more backticks).
+			if length, rest, ok := fenceInfo(trimmed); ok && rest == "" && length >= codeFence {
 				flushCodeBlock()
 			} else {
-				flushParagraph()
-				flushBlockquote()
-				closeList()
-				inCodeBlock = true
-				codeLang = strings.TrimSpace(strings.TrimPrefix(trimmed, "```"))
+				codeLines = append(codeLines, line)
 			}
 			continue
 		}
 
-		if inCodeBlock {
-			codeLines = append(codeLines, line)
+		if length, rest, ok := fenceInfo(trimmed); ok {
+			flushParagraph()
+			flushBlockquote()
+			closeList()
+			inCodeBlock = true
+			codeFence = length
+			codeLang = rest
 			continue
 		}
 
@@ -409,7 +422,10 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 					title = stripInline(text)
 					continue
 				}
-				builder.WriteString(fmt.Sprintf("%s<h%d>%s</h%d>\n", blockIndent, level, renderInline(text), level))
+				slug := uniqueSlug(stripInline(text), slugCounts)
+				builder.WriteString(fmt.Sprintf(
+					"%s<h%d id=%q>%s<a class=\"heading-anchor\" href=\"#%s\" aria-label=\"Link to this section\">#</a></h%d>\n",
+					blockIndent, level, slug, renderInline(text), slug, level))
 				continue
 			}
 		}
@@ -465,6 +481,77 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	}
 
 	return template.HTML(builder.String()), strings.TrimSpace(firstParagraph), strings.TrimSpace(title)
+}
+
+// highlightCode tokenises a fenced code block with Chroma and emits token
+// <span>s carrying our own semantic classes (see the .hl-* rules in the
+// template). Colours live in CSS variables so highlighting follows the
+// light/dark theme. Unknown languages (or the empty language) fall back to
+// plainly-escaped text, so nothing is ever lost.
+func highlightCode(code, lang string) string {
+	lexer := lexers.Get(lang)
+	if lexer == nil {
+		return escapeText(code)
+	}
+	iterator, err := chroma.Coalesce(lexer).Tokenise(nil, code)
+	if err != nil {
+		return escapeText(code)
+	}
+
+	var b strings.Builder
+	for _, tok := range iterator.Tokens() {
+		text := escapeText(tok.Value)
+		class := tokenClass(tok.Type)
+		if class == "" {
+			b.WriteString(text)
+			continue
+		}
+		b.WriteString(`<span class="`)
+		b.WriteString(class)
+		b.WriteString(`">`)
+		b.WriteString(text)
+		b.WriteString(`</span>`)
+	}
+	return b.String()
+}
+
+// tokenClass maps a Chroma token type onto one of our restrained set of
+// highlight classes. Anything unmapped (plain names, operators, punctuation,
+// whitespace) renders in the default foreground colour.
+func tokenClass(tt chroma.TokenType) string {
+	switch {
+	case tt.InCategory(chroma.Comment):
+		return "hl-com"
+	case tt.InSubCategory(chroma.String):
+		return "hl-str"
+	case tt.InSubCategory(chroma.Number):
+		return "hl-num"
+	case tt.InCategory(chroma.Keyword):
+		return "hl-kw"
+	case tt == chroma.NameTag:
+		return "hl-kw"
+	case tt == chroma.NameFunction || tt == chroma.NameFunctionMagic || tt == chroma.NameClass:
+		return "hl-fn"
+	case tt == chroma.NameAttribute || tt == chroma.NameDecorator:
+		return "hl-fn"
+	case tt == chroma.NameBuiltin || tt == chroma.NameBuiltinPseudo:
+		return "hl-builtin"
+	}
+	return ""
+}
+
+// fenceInfo reports whether trimmed begins a code fence (a run of 3 or more
+// backticks). It returns the fence length and the trailing info string (e.g. the
+// language). For a closing fence the info string is empty.
+func fenceInfo(trimmed string) (length int, rest string, ok bool) {
+	n := 0
+	for n < len(trimmed) && trimmed[n] == '`' {
+		n++
+	}
+	if n < 3 {
+		return 0, "", false
+	}
+	return n, strings.TrimSpace(trimmed[n:]), true
 }
 
 func headingLevel(line string) int {
@@ -582,8 +669,12 @@ func renderInline(input string) string {
 			}
 			fallthrough
 		default:
-			emit(escapeText(string(input[i])))
-			i++
+			_, size := utf8.DecodeRuneInString(input[i:])
+			if size < 1 {
+				size = 1
+			}
+			emit(escapeText(input[i : i+size]))
+			i += size
 		}
 	}
 
@@ -707,6 +798,44 @@ func makeExcerpt(s string, limit int) string {
 		cut = limit
 	}
 	return strings.TrimSpace(text[:cut]) + "…"
+}
+
+// slugify turns heading text into a URL-fragment-safe id: lowercased, with
+// runs of non-alphanumeric characters collapsed to single hyphens.
+func slugify(s string) string {
+	var b strings.Builder
+	lastHyphen := true // leading hyphens are suppressed
+	for _, r := range strings.ToLower(s) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+			lastHyphen = false
+		case r == '\'', r == '’':
+			// Drop apostrophes so "let's" slugs to "lets", not "let-s".
+		default:
+			if !lastHyphen {
+				b.WriteByte('-')
+				lastHyphen = true
+			}
+		}
+	}
+	return strings.Trim(b.String(), "-")
+}
+
+// uniqueSlug slugifies text and disambiguates collisions within a single
+// document by suffixing -2, -3, … so every heading id is unique.
+func uniqueSlug(text string, counts map[string]int) string {
+	base := slugify(text)
+	if base == "" {
+		base = "section"
+	}
+	slug := base
+	for counts[slug] > 0 {
+		counts[base]++
+		slug = fmt.Sprintf("%s-%d", base, counts[base])
+	}
+	counts[slug]++ // reserve the chosen slug so nothing else can take it
+	return slug
 }
 
 func titleFromSlug(slug string) string {
