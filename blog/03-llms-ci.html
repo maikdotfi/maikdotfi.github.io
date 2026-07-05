@@ -241,13 +241,25 @@
       list-style: none;
     }
 
+    article ol {
+      margin: 1.4rem 0;
+      padding-left: 1.6rem;
+    }
+
     article li {
-      position: relative;
-      padding-left: 1.5rem;
       margin: 0.5rem 0;
     }
 
-    article li::before {
+    article ul li {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    article ol li::marker {
+      color: var(--accent);
+    }
+
+    article ul li::before {
       content: "";
       position: absolute;
       left: 0.1rem;
@@ -378,12 +390,12 @@
         <div class="tags"><span class="tag">ci</span><span class="tag">llms</span>
         </div>
       </header>
-      <p>Like most people, I'm not convinced that LLMs(/thE Ai) will be replacing software professionals. But, I do find that it's very difficult to know when LLM is a good fit for a task and when you should just do it manually. One place where it feels like a quick and easy, continuous, win is the CI pipeline. Even if that fucker makes some mistakes, it's still sort of &#34;a pair of eyes&#34; to look at your commit.</p>
+      <p>Like most people, I'm not convinced that LLMs(/thE Ai) will be replacing software professionals. But, I do find that it's very difficult to know when LLM is a good fit for a task and when you should just do it manually. One place where it feels like a quick and easy, continuous, win is the CI pipeline. Even if that fucker makes some mistakes, it's still sort of "a pair of eyes" to look at your commit.</p>
       <h2 id="ollama-lets-fucking-go">Ollama, let's fucking go<a class="heading-anchor" href="#ollama-lets-fucking-go" aria-label="Link to this section">#</a></h2>
       <p>To prove my point I've added a simple blog reviewer to my blog repository. It just uses Codex CLI in the pipeline and I've pointed it to Ollama Cloud (becuz free).</p>
-      <p>Technically, Codex is a coding agent and not a general purpose &#34;agent CLI&#34; for which you can overwrite the system prompt. It is a way to allow the LLM to use tools (mainly the gh CLI), and do the agent loop. It does inject a system prompt that starts like this:</p>
+      <p>Technically, Codex is a coding agent and not a general purpose "agent CLI" for which you can overwrite the system prompt. It is a way to allow the LLM to use tools (mainly the gh CLI), and do the agent loop. It does inject a system prompt that starts like this:</p>
       <pre><code class="language-text">You are a coding agent running in the Codex CLI, a terminal-based coding assistant</code></pre>
-      <p>I found Codex to work fine for the task although it's not exactly coding, but for many other &#34;agents&#34; you might use in your CI coding is probably useful!</p>
+      <p>I found Codex to work fine for the task although it's not exactly coding, but for many other "agents" you might use in your CI coding is probably useful!</p>
       <p>Here's a simplified example of how you would do this in general:</p>
       <pre><code class="language-yaml"><span class="hl-kw">name</span>: Codex PR blog reviewer
 
@@ -419,17 +431,17 @@
         <span class="hl-kw">run</span>: |<span class="hl-str">
           set -euo pipefail
 
-          export CODEX_HOME=&#34;$GITHUB_WORKSPACE/.codex-ci&#34;
-          mkdir -p &#34;$CODEX_HOME&#34;
+          export CODEX_HOME="$GITHUB_WORKSPACE/.codex-ci"
+          mkdir -p "$CODEX_HOME"
 
-          cat &gt; &#34;$CODEX_HOME/config.toml&#34; &lt;&lt;'EOF'
-          model =&#34;gpt-oss:120b-cloud&#34;
-          model_provider = &#34;ollamacloud&#34;
+          cat &gt; "$CODEX_HOME/config.toml" &lt;&lt;'EOF'
+          model ="gpt-oss:120b-cloud"
+          model_provider = "ollamacloud"
 
           [model_providers.ollamacloud]
-          name = &#34;Ollama&#34;
-          base_url = &#34;https://ollama.com/v1&#34;
-          env_key = &#34;OLLAMA_API_KEY&#34;
+          name = "Ollama"
+          base_url = "https://ollama.com/v1"
+          env_key = "OLLAMA_API_KEY"
           EOF
 
           cat &gt; prompt.txt &lt;&lt;'PROMPT'
@@ -437,14 +449,14 @@
 
           Blogs live under the ./blog folder, if there are no changes there then you don't have to do anything.
 
-          You can use gh CLI to post comments `gh pr comment &#34;$PR&#34; --bode &#34;&lt;your comment&gt;&#34;`
+          You can use gh CLI to post comments `gh pr comment "$PR" --bode "&lt;your comment&gt;"`
 
           Rules:
           - Only comment on changed lines in the PR.
           - If you are not confident about an inline location, omit it.
           PROMPT
 
-          codex exec --yolo &#34;$(cat prompt.txt)&#34;</span></code></pre>
+          codex exec --yolo "$(cat prompt.txt)"</span></code></pre>
       <p>I greatly simplified the prompt, I had to experiment a bit with it to get it to do what I wanted. However, I really recommend trying to keep it short, the shorter you can make your point the better the prompt (in my experience).</p>
       <p>I think it's fun having an LLM buddy commenting on my blog posts, and it has given good feedback although it has a problem with swear words occasionally. Weird.</p>
 

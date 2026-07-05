@@ -299,7 +299,7 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	var paragraph []string
 	var firstParagraph string
 	var title string
-	inList := false
+	listType := "" // "", "ul", or "ol"
 	inBlockquote := false
 	var blockquoteLines []string
 	inCodeBlock := false
@@ -357,11 +357,28 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 	}
 
 	closeList := func() {
-		if inList {
+		if listType != "" {
 			builder.WriteString(blockIndent)
-			builder.WriteString("</ul>\n")
-			inList = false
+			builder.WriteString("</")
+			builder.WriteString(listType)
+			builder.WriteString(">\n")
+			listType = ""
 		}
+	}
+
+	writeListItem := func(kind, content string) {
+		if listType != kind {
+			closeList()
+			builder.WriteString(blockIndent)
+			builder.WriteString("<")
+			builder.WriteString(kind)
+			builder.WriteString(">\n")
+			listType = kind
+		}
+		builder.WriteString(blockIndent)
+		builder.WriteString("  <li>")
+		builder.WriteString(renderInline(content))
+		builder.WriteString("</li>\n")
 	}
 
 	flushBlockquote := func() {
@@ -441,15 +458,14 @@ func markdownToHTML(md string) (template.HTML, string, string) {
 		if strings.HasPrefix(trimmed, "- ") {
 			flushParagraph()
 			flushBlockquote()
-			if !inList {
-				builder.WriteString(blockIndent)
-				builder.WriteString("<ul>\n")
-				inList = true
-			}
-			builder.WriteString(blockIndent)
-			builder.WriteString("  <li>")
-			builder.WriteString(renderInline(strings.TrimSpace(trimmed[2:])))
-			builder.WriteString("</li>\n")
+			writeListItem("ul", strings.TrimSpace(trimmed[2:]))
+			continue
+		}
+
+		if content, ok := orderedListItem(trimmed); ok {
+			flushParagraph()
+			flushBlockquote()
+			writeListItem("ol", content)
 			continue
 		}
 
@@ -554,6 +570,20 @@ func fenceInfo(trimmed string) (length int, rest string, ok bool) {
 	return n, strings.TrimSpace(trimmed[n:]), true
 }
 
+// orderedListItem reports whether trimmed is an ordered list item ("1. text",
+// "2. text", …) and returns the item content. The actual number is ignored —
+// the browser renumbers <ol> items — so "1." on every line is fine.
+func orderedListItem(trimmed string) (content string, ok bool) {
+	n := 0
+	for n < len(trimmed) && trimmed[n] >= '0' && trimmed[n] <= '9' {
+		n++
+	}
+	if n == 0 || n+1 >= len(trimmed) || trimmed[n] != '.' || trimmed[n+1] != ' ' {
+		return "", false
+	}
+	return strings.TrimSpace(trimmed[n+1:]), true
+}
+
 func headingLevel(line string) int {
 	count := 0
 	for count < len(line) && line[count] == '#' {
@@ -625,7 +655,7 @@ func renderInline(input string) string {
 					emit(`<img src="`)
 					emit(html.EscapeString(url))
 					emit(`" alt="`)
-					emit(escapeText(alt))
+					emit(html.EscapeString(alt))
 					emit(`"`)
 					if sizeClass != "" {
 						emit(` class="img-`)
@@ -739,8 +769,11 @@ func stripInline(s string) string {
 	return replacer.Replace(s)
 }
 
+// escapeText escapes a string for use in HTML text content. Only &, < and >
+// are special there; quotes are left as-is (they only need escaping inside
+// attribute values — see html.EscapeString for that).
 func escapeText(s string) string {
-	if !strings.ContainsAny(s, "&<>\"") {
+	if !strings.ContainsAny(s, "&<>") {
 		return s
 	}
 	var b strings.Builder
@@ -752,8 +785,6 @@ func escapeText(s string) string {
 			b.WriteString("&lt;")
 		case '>':
 			b.WriteString("&gt;")
-		case '"':
-			b.WriteString("&#34;")
 		default:
 			b.WriteRune(r)
 		}

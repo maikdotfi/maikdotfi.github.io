@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Python is great although it sucks | maik.fi</title>
+  <title>Agent the Hard Way: Why and what? | maik.fi</title>
   <link rel="icon" href="../favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -383,19 +383,45 @@
     </nav>
     <article>
       <header>
-        <h1>Python is great although it sucks</h1>
+        <h1>Agent the Hard Way: Why and what?</h1>
         <p class="meta">
-          <time datetime="2025-11-22">November 22, 2025</time> — by Mike
+          <time datetime="2026-07-05">July 5, 2026</time> — by Mike
         </p>
-        <div class="tags"><span class="tag">python</span><span class="tag">fun</span>
+        <div class="tags"><span class="tag">hard way</span><span class="tag">agentic coding</span><span class="tag">llms</span>
         </div>
       </header>
-      <p>I've been writing Python again and to my surprise, I've been enjoying it a lot! For the most part.</p>
-      <p>What I really enjoy in Python is the actual writing and how concise, yet expressive, the language can be at the same time (I can't explain it, but the syntax just feels natural after a while). Of course this does depend on how you write it to a degree. One of the weaknesses I've seen with Python is that people write really shit code in Python. That's not Python's fault directly, but Python sure does allow/encourage some stuff I think should be straight up illegal, like awful one-liner syntax that some people consider <em>elegant</em>. Fuck me.</p>
-      <p>However, my main issue with Python is that it sucks ass the second you want to actually run it someplace other than your laptop. Coming back to Python from working mostly with Go, it's easy to see the appeal in the static binaries and cross-compilation that Go has. (of course Go isn't perfect either).</p>
-      <h2 id="b-b-but-uv">B-b-but uv!<a class="heading-anchor" href="#b-b-but-uv" aria-label="Link to this section">#</a></h2>
-      <p>I know somebody reading this already thought to themselves "man, uv solves that, stop bitching". Yeaah, I mean it helps. If you are in an environment homogeneous hardware, no network limitations and fast connectivity too, then <code>uv</code> probably does fix Python packaging and runtime challenges quite neatly. I agree. But when you are dealing with different architectures (x86, arm64) and with different operating systems (Linux, macOS, even fucking Windows) AND you cannot just download bunch of shit from the internet... Python sucks, not Python the language, but the experience after writing the code.</p>
-      <p>Overall Python can be pretty fun, and I had some fun writing it after a long break of not writing more than a few lines here and there for years. I find Python often perfect for scripting because it's available by default and with AI you can easily get by with just stdlib and it's easy to read!</p>
+      <p>I am starting a new project, and at the same time writing about it each step of the way. This means there will be a series of blog posts under this "Agent the Hard Way" umbrella.</p>
+      <p>I was thinking of writing a book, not a <em>real</em> book. Just instead of blog posts create an open static site with <a href="https://github.com/rust-lang/mdBook/">mdbook</a> or something similar. But ultimately that's not what I need right now, I just want to focus on hacking the thing together and writing as a way of learning instead of focusing on being actually pedagogical in the content. I'll just write this series like I'm writing for my self, somebody who wants to learn about the topic and know it deeply. Unlike typical blog posts though, I do plan on updating the posts if I discover something that I would like to correct/improve upon. Like adding examples or even major refactoring on the content.</p>
+      <p>Why am I building it? Well I find that a lot of toil can be handled by agents in my daily work, so I see value in the technology. And beyond software development and delivery related tasks there's much much more potential I see. Like diagnosing issues and troublshooting much more efficiently. More philosophically, it's cool computer has new tricks. We can solve problems we couldn't before. I find joy in the work and I'm optimistic local AI models will become so good we can do this without all the fucking data centers.</p>
+      <h2 id="agent-the-hard-way">Agent the Hard Way<a class="heading-anchor" href="#agent-the-hard-way" aria-label="Link to this section">#</a></h2>
+      <p>First things first, the name is of course a reference to the legendary <a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">Kubernetes the hard way</a> by Kelsey Hightower. But the project isn't going to be quite the same as that one. I just really think the name is fun, props to Kelsey!</p>
+      <p>So what it is? Time will tell in more detail, but I set out to deploy a <strong>coding agent into production</strong> as the end goal. I will self-host the agent on a spare Intel NUC I have, or I will deploy it on a cheap VPS, depends a bit how I want to interact with it. I ain't gonna open my home network to the interwebs for this.</p>
+      <h2 id="coding-agent">Coding Agent<a class="heading-anchor" href="#coding-agent" aria-label="Link to this section">#</a></h2>
+      <p>Unfortunately, there isn't really a good <em>coding agent</em> you can just deploy. Damn, so I'll just write one then, easy enough. Except it's not that easy when I think about it. To build an agent you build a while loop that exists when the LLM does not want to do more tool calls, but wait, where does that loop run? How does it access the repo? Where is the session stored and how is it triggered? How does it build the project if it's not on my laptop? (goal of the project is <strong>production</strong>, my laptop does not belong in prod)</p>
+      <h3 id="harness">Harness<a class="heading-anchor" href="#harness" aria-label="Link to this section">#</a></h3>
+      <p>So looking at things that exist we have things that you run locally like:</p>
+      <ul>
+        <li>codex</li>
+        <li>claude code</li>
+        <li>pi.dev</li>
+      </ul>
+      <p>Yeah, out of those you can perhaps choose Pi and extend your way into happiness. These are called <strong>Agent Harnessess</strong> these days.</p>
+      <p>Then we also have of course things that don't run on your laptop, like:</p>
+      <ul>
+        <li><a href="https://agents.cloudflare.com/">CloudFlare Agents</a></li>
+        <li><a href="https://cloud.google.com/gemini-enterprise/agents">Google Gemini Enterprise Agent Platform</a> (what a name...?)</li>
+        <li><a href="https://claude.com/blog/claude-managed-agents">Claude Managed Agents</a></li>
+      </ul>
+      <p>In the OSS world there does not seem to be a project that is winning (AFAIK), but surely there are hundreds if not thousands of projects already being built trying to become the Kubernetes of Agent Platforms. I'm sure of that. So "Agent the Hard Way" having some reference to Kubernetes feels actually pretty fair, just like Kubernetes once was competing with Mesos and Docker Swarm before becoming dominant in the market.</p>
+      <p>In fairness, I will mention that there is the <a href="https://github.com/langchain-ai/open-swe">Open SWE</a> project from LangChain that is perhaps closest to something I could use right away. But I don't think there is mass adoption of it, so I don't see point focusing on that instead of just writing something myself and learning even more. :)</p>
+      <h2 id="what-goes-into-a-harness">What goes into a Harness?<a class="heading-anchor" href="#what-goes-into-a-harness" aria-label="Link to this section">#</a></h2>
+      <p>I made a small picture of the things that <em>could</em> go into a coding agent harness for example:</p>
+      <p><img src="./agent-harness-crayon.png" alt="agent-harness-crayon.png"></p>
+      <p>These are some of the things that will get dedicated posts, and some will not. I'll start with the very basics though.</p>
+      <h2 id="whats-the-angle">What's the angle?<a class="heading-anchor" href="#whats-the-angle" aria-label="Link to this section">#</a></h2>
+      <p>Ok so what will I do differently? Well for starters, I want to create a meta harness. Not just a harness like Claude Code (a coding agent CLI for local use), but a meta harness that can be used (in code) to create agents of all kinds of shapes and for all kinds of uses.</p>
+      <p>I will be using Go as the programming language. I think the code is readable enough if you don't know Go, and I find it should fit very well into this problem space. Importantly, Go is very stable so hopefully the code will require minimal maintenance to still compile and work much later.</p>
+      <p>That's what I will build and deploy. Now, building my own does not in my mind mean I will not use dependencies at all. I definitely will, but only <em>libraries</em> never <em>frameworks</em>. Using a framework is something you do at work, it's productive, but rarely great to learn how things <strong>work</strong> and even that productivity gain can be destroyed by migration work between major versions if you are unlucky.</p>
 
     </article>
   </div>
