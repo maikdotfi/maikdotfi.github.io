@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent From Scratch: LLM APIs | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f1ea;
+      --bg-tint: #ece7dc;
+      --fg: #1c1a16;
+      --muted-fg: #756f63;
+      --accent: #b14a26;
+      --rule: #d8d2c4;
+      --code-bg: #ede7d8;
+      --code-border: #dad1bd;
+      --tok-com: #8a8372;
+      --tok-kw: #9c3d1f;
+      --tok-str: #4f6a2e;
+      --tok-num: #8a5a12;
+      --tok-fn: #345b6b;
+      --tok-builtin: #7a4a86;
+      --display: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+        --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+        --code-bg: #24241c; --code-border: #33332a;
+        --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+        --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f1ea; --bg-tint: #ece7dc; --fg: #1c1a16;
+      --muted-fg: #756f63; --accent: #b14a26; --rule: #d8d2c4;
+      --code-bg: #ede7d8; --code-border: #dad1bd;
+      --tok-com: #8a8372; --tok-kw: #9c3d1f; --tok-str: #4f6a2e;
+      --tok-num: #8a5a12; --tok-fn: #345b6b; --tok-builtin: #7a4a86;
+      color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+      --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+      --code-bg: #24241c; --code-border: #33332a;
+      --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+      --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      color: var(--fg);
+      font-family: var(--body);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      max-width: 50rem;
+      margin: 0 auto;
+      padding: clamp(2rem, 5vw, 3.5rem) 1.6rem 6rem;
+    }
+
+     
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+    }
+
+    .nav-links { display: flex; gap: 1.5rem; align-items: baseline; }
+
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      transition: color 180ms ease;
+    }
+
+    nav a:hover,
+    nav a:focus-visible { color: var(--accent); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--muted-fg);
+      cursor: pointer;
+      transition: color 180ms ease, transform 300ms ease;
+    }
+
+    .theme-toggle svg { width: 1.6rem; height: 1.6rem; }
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible { color: var(--accent); transform: rotate(-12deg); }
+    .theme-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+     
+    article { margin-top: clamp(3rem, 7vw, 5rem); }
+
+    article > header {
+      margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 750;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.2rem;
+      max-width: 18ch;
+    }
+
+    .meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+      margin: 0;
+    }
+
+    .tags {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .tag::before { content: "#"; opacity: 0.45; margin-right: 0.15em; }
+
+     
+    article > p,
+    article > ul,
+    article > blockquote,
+    article > pre,
+    article > h2,
+    article > h3,
+    article > h4 {
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: 120ms;
+    }
+
+    article p { margin: 1.4rem 0; }
+
+    article > p:first-of-type { margin-top: 0; }
+
+    article > p:first-of-type::first-letter {
+      font-family: var(--display);
+      font-weight: 750;
+      float: left;
+      font-size: 3.8rem;
+      line-height: 0.78;
+      padding: 0.05em 0.1em 0 0;
+      color: var(--accent);
+    }
+
+    h2, h3, h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 2.6rem 0 0.9rem;
+    }
+
+    h2 { font-size: 1.65rem; }
+    h3 { font-size: 1.3rem; }
+    h4 { font-size: 1.1rem; }
+
+     
+    .heading-anchor {
+      margin-left: 0.35em;
+      color: var(--muted-fg);
+      font-weight: 400;
+      text-decoration: none;
+      background: none;
+      opacity: 0;
+      transition: opacity 160ms ease, color 160ms ease;
+    }
+    h2:hover .heading-anchor,
+    h3:hover .heading-anchor,
+    h4:hover .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 0.65; }
+    .heading-anchor:hover { opacity: 1; color: var(--accent); }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: 100% 1px;
+      background-position: 0 1.15em;
+      background-repeat: no-repeat;
+      transition: background-position 160ms ease, opacity 160ms ease;
+    }
+
+    a:hover,
+    a:focus-visible { opacity: 0.7; }
+
+    article ul {
+      margin: 1.4rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    article ol {
+      margin: 1.4rem 0;
+      padding-left: 1.6rem;
+    }
+
+    article li {
+      margin: 0.5rem 0;
+    }
+
+    article ul li {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    article ol li::marker {
+      color: var(--accent);
+    }
+
+    article ul li::before {
+      content: "";
+      position: absolute;
+      left: 0.1rem;
+      top: 0.72em;
+      width: 0.4rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    article pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-left: 2px solid var(--accent);
+      border-radius: 0;
+      padding: 1.2rem 1.3rem;
+      overflow-x: auto;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      margin: 1.8rem 0;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.86em;
+    }
+
+     
+    article pre code { font-size: 1em; }
+
+     
+    article pre .hl-com     { color: var(--tok-com); font-style: italic; }
+    article pre .hl-kw      { color: var(--tok-kw); }
+    article pre .hl-str     { color: var(--tok-str); }
+    article pre .hl-num     { color: var(--tok-num); }
+    article pre .hl-fn      { color: var(--tok-fn); }
+    article pre .hl-builtin { color: var(--tok-builtin); }
+
+    article p code,
+    article li code {
+      background: var(--code-bg);
+      padding: 0.12rem 0.4rem;
+      border-radius: 0;
+    }
+
+    article img {
+      max-width: 50%;
+      height: auto;
+      border-radius: 0;
+      margin: 2rem auto;
+      display: block;
+    }
+
+    article img.img-small { max-width: 30%; }
+    article img.img-wide { max-width: 80%; }
+    article img.img-full { max-width: 100%; }
+
+    article blockquote {
+      margin: 2rem 0;
+      padding: 0 0 0 2.2rem;
+      position: relative;
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.35rem;
+      line-height: 1.45;
+      color: var(--fg);
+    }
+
+    article blockquote::before {
+      content: "\201C";
+      position: absolute;
+      left: -0.1rem;
+      top: 0.35rem;
+      font-family: var(--display);
+      font-size: 3.4rem;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    article blockquote p { margin: 0; }
+
+    .footnotes {
+      border-top: 1px solid var(--rule);
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      font-size: 0.92rem;
+      color: var(--muted-fg);
+    }
+
+    .footnotes ol { margin: 0; padding-left: 1.3rem; }
+    .footnotes li { line-height: 1.6; margin: 0.4rem 0; }
+
+    sup a { background: none; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="nav-links">
+        <a href="index.html">← All writing</a>
+        <a href="../index.html">maik.fi</a>
+      </div>
+      <button type="button" class="theme-toggle" aria-pressed="false" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 256 256" aria-hidden="true">
+          <rect width="256" height="256" fill="none"/>
+          <polygon points="64 40 192 40 240 152 16 152 64 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="128" y1="152" x2="128" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="96" y1="216" x2="160" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="200" y1="152" x2="200" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+        </svg>
+      </button>
+    </nav>
+    <article>
+      <header>
+        <h1>Agent From Scratch: LLM APIs</h1>
+        <p class="meta">
+          <time datetime="2026-07-09">July 9, 2026</time> — by Mike
+        </p>
+        <div class="tags"><span class="tag">hard way</span><span class="tag">agentic coding</span><span class="tag">llms</span>
+        </div>
+      </header>
+      <p>I wanted to write a minimalistic agent from scratch to make sure I fully understand how agents are built against the LLM provider APIs.</p>
+      <h2 id="options">Options<a class="heading-anchor" href="#options" aria-label="Link to this section">#</a></h2>
+      <p>Alrighty, so as always with standards, there are multiple competing ones. <sup><a href="#fn-1">1</a></sup> Let's quickly take a peak at the state of this as of May 2026. We have three major players in the game:</p>
+      <ul>
+        <li>OpenAI Chat Completions API (successor of Completions API)</li>
+        <li>OpenAI Responses API</li>
+        <li>Anthropic Messages API</li>
+      </ul>
+      <p>The Chat Completions API from OpenAI is competely <strong>stateless</strong> and relatively low-level. It has been largely adopted as the lingua franca across all the providers (Amazon Bedrock, Google Vertex etc.). If you want to only know one API and do serious work, just use the Completions API, but it might be that the other two are still useful for you.</p>
+      <p>The Responses API from OpenAI is the newer and now <em>recommended</em> API to replace the Chat Completions API. But, many argue it is complex and while you can use it with client-side sessions/history it defaults to keeping history at the server. We can probably imagine this being good for caching and simpler for the developer, but once you have abstracted away the actual API in your code, how much simpler is it? Also it seems useful to have full history of the conversation anyways.. I don't really dig all the magic, a Chat Completions v2 would have made more sense to me.</p>
+      <p>The Messages API from Anthropic is currently one that is perhaps technically most pleasing because it really treats the LLM as an LLM in the API. It is an API to run inference on a machine, nothing more (well not true... there are built-in tools and such). It's not quite perfect, but I found that it makes the most sense to me and it's still completely stateless. So I chose to implement an agent using the Anthropic API because the OpenAI's Chat Completions API looks a bit awkward with agentic use, and Responses API isn't clicking for me.</p>
+      <h2 id="generating-a-message">Generating a Message<a class="heading-anchor" href="#generating-a-message" aria-label="Link to this section">#</a></h2>
+      <p>Let's get to the code. We'll approach the exercise mostly via writing tests, because that is perfect way to try something out with Go. But we do need something to test, so let's write some code that talks to the Anthropic API.</p>
+      <p>The Anthropic Go SDK is unfortunately bit of a mess, so I won't bother using it. We'll just rawdog the API.</p>
+      <pre><code class="language-go"><span class="hl-kw">package</span> main
+
+<span class="hl-kw">import</span> (
+	<span class="hl-str">"bytes"</span>
+	<span class="hl-str">"context"</span>
+	<span class="hl-str">"encoding/json"</span>
+	<span class="hl-str">"fmt"</span>
+	<span class="hl-str">"io"</span>
+	<span class="hl-str">"net/http"</span>
+	<span class="hl-str">"time"</span>
+)
+
+<span class="hl-kw">const</span> defaultModel <span class="hl-kw">string</span> = <span class="hl-str">"gemma4:31b-cloud"</span>
+
+<span class="hl-kw">type</span> anthropicRequest <span class="hl-kw">struct</span> {
+	Model     <span class="hl-kw">string</span>          <span class="hl-str">`json:"model"`</span>
+	MaxTokens <span class="hl-kw">int</span>             <span class="hl-str">`json:"max_tokens"`</span>
+	System    <span class="hl-kw">string</span>          <span class="hl-str">`json:"system,omitempty"`</span>
+	Messages  []Message       <span class="hl-str">`json:"messages"`</span>
+	Tools     []Tool          <span class="hl-str">`json:"tools,omitempty"`</span>
+	Thinking  *ThinkingConfig <span class="hl-str">`json:"thinking,omitempty"`</span>
+	Stream    <span class="hl-kw">bool</span>            <span class="hl-str">`json:"stream"`</span>
+}
+
+<span class="hl-com">// ThinkingConfig turns on the model's extended thinking. Type is "enabled" with</span>
+<span class="hl-com">// an explicit BudgetTokens (which must be less than MaxTokens), matching the</span>
+<span class="hl-com">// classic Messages API shape.</span>
+<span class="hl-kw">type</span> ThinkingConfig <span class="hl-kw">struct</span> {
+	Type         <span class="hl-kw">string</span> <span class="hl-str">`json:"type"`</span>
+	BudgetTokens <span class="hl-kw">int</span>    <span class="hl-str">`json:"budget_tokens,omitempty"`</span>
+}
+
+<span class="hl-com">// Message is a single conversation turn, matching the Messages API shape. The</span>
+<span class="hl-com">// API also accepts a plain string for Content, but we always use the block</span>
+<span class="hl-com">// form so tool_use and tool_result turns need no special casing.</span>
+<span class="hl-kw">type</span> Message <span class="hl-kw">struct</span> {
+	Role    MessageRole    <span class="hl-str">`json:"role"`</span>
+	Content []ContentBlock <span class="hl-str">`json:"content"`</span>
+}
+
+<span class="hl-com">// Text concatenates the text of every text block, ignoring tool_use and other</span>
+<span class="hl-com">// block types. Convenient for the common "what did the assistant say" case.</span>
+<span class="hl-kw">func</span> (m Message) <span class="hl-fn">Text</span>() <span class="hl-kw">string</span> {
+	<span class="hl-kw">var</span> s <span class="hl-kw">string</span>
+	<span class="hl-kw">for</span> _, b := <span class="hl-kw">range</span> m.Content {
+		<span class="hl-kw">if</span> b.Type == <span class="hl-str">"text"</span> {
+			s += b.Text
+		}
+	}
+	<span class="hl-kw">return</span> s
+}
+
+<span class="hl-kw">type</span> MessageRole <span class="hl-kw">string</span>
+
+<span class="hl-kw">const</span> (
+	MessageRoleUser      MessageRole = <span class="hl-str">"user"</span>
+	MessageRoleAssistant MessageRole = <span class="hl-str">"assistant"</span>
+)
+
+<span class="hl-com">// ContentBlock is a single piece of a message's content. The relevant fields</span>
+<span class="hl-com">// depend on Type: text/thinking carry Text/Thinking; tool_use carries</span>
+<span class="hl-com">// ID/Name/Input; tool_result carries ToolUseID/Content/IsError. A thinking</span>
+<span class="hl-com">// block also carries a Signature that must be preserved verbatim when the</span>
+<span class="hl-com">// assistant turn is fed back in (e.g. alongside tool_use).</span>
+<span class="hl-kw">type</span> ContentBlock <span class="hl-kw">struct</span> {
+	Type      <span class="hl-kw">string</span>          <span class="hl-str">`json:"type"`</span>
+	Text      <span class="hl-kw">string</span>          <span class="hl-str">`json:"text,omitempty"`</span>
+	Thinking  <span class="hl-kw">string</span>          <span class="hl-str">`json:"thinking,omitempty"`</span>
+	Signature <span class="hl-kw">string</span>          <span class="hl-str">`json:"signature,omitempty"`</span>
+	ID        <span class="hl-kw">string</span>          <span class="hl-str">`json:"id,omitempty"`</span>
+	Name      <span class="hl-kw">string</span>          <span class="hl-str">`json:"name,omitempty"`</span>
+	Input     json.RawMessage <span class="hl-str">`json:"input,omitempty"`</span>
+	ToolUseID <span class="hl-kw">string</span>          <span class="hl-str">`json:"tool_use_id,omitempty"`</span>
+	Content   <span class="hl-kw">string</span>          <span class="hl-str">`json:"content,omitempty"`</span>
+	IsError   <span class="hl-kw">bool</span>            <span class="hl-str">`json:"is_error,omitempty"`</span>
+}
+
+<span class="hl-kw">type</span> Usage <span class="hl-kw">struct</span> {
+	InputTokens  <span class="hl-kw">int</span> <span class="hl-str">`json:"input_tokens,omitempty"`</span>
+	OutputTokens <span class="hl-kw">int</span> <span class="hl-str">`json:"output_tokens,omitempty"`</span>
+}
+
+<span class="hl-com">// anthropicResponse is the relevant subset of the Messages API response. It</span>
+<span class="hl-com">// embeds Message so the role and content decode straight into a Message with</span>
+<span class="hl-com">// no further copying.</span>
+<span class="hl-kw">type</span> anthropicResponse <span class="hl-kw">struct</span> {
+	Message
+	Usage Usage <span class="hl-str">`json:"usage"`</span>
+}
+
+<span class="hl-com">// GenerateRequest is the input to GenerateMessage. Model, max tokens, etc. come</span>
+<span class="hl-com">// from the client, so they aren't repeated here.</span>
+<span class="hl-kw">type</span> GenerateRequest <span class="hl-kw">struct</span> {
+	SystemPrompt <span class="hl-kw">string</span>
+	Messages     []Message
+	Tools        []Tool
+	Thinking     *ThinkingConfig
+}
+
+<span class="hl-kw">type</span> AnthropicClient <span class="hl-kw">struct</span> {
+	Endpoint   <span class="hl-kw">string</span>
+	APIKey     <span class="hl-kw">string</span>
+	Model      <span class="hl-kw">string</span>
+	MaxTokens  <span class="hl-kw">int</span>
+	HTTPClient *http.Client
+}
+
+<span class="hl-kw">func</span> <span class="hl-fn">NewAnthropicClient</span>(endpoint, apiKey, model <span class="hl-kw">string</span>, maxTokens <span class="hl-kw">int</span>) *AnthropicClient {
+	<span class="hl-kw">if</span> model == <span class="hl-str">""</span> {
+		model = defaultModel
+	}
+	<span class="hl-kw">if</span> maxTokens &lt;= <span class="hl-num">0</span> {
+		maxTokens = <span class="hl-num">4096</span>
+	}
+	<span class="hl-kw">return</span> &amp;AnthropicClient{
+		Endpoint:   endpoint,
+		APIKey:     apiKey,
+		Model:      model,
+		MaxTokens:  maxTokens,
+		HTTPClient: &amp;http.Client{Timeout: <span class="hl-num">5</span> * time.Minute},
+	}
+}
+
+<span class="hl-kw">func</span> (c *AnthropicClient) <span class="hl-fn">GenerateMessage</span>(ctx context.Context, req GenerateRequest) (Message, <span class="hl-kw">error</span>) {
+	body := anthropicRequest{
+		Model:     c.Model,
+		MaxTokens: c.MaxTokens,
+		System:    req.SystemPrompt,
+		Messages:  req.Messages,
+		Tools:     req.Tools,
+		Thinking:  req.Thinking,
+		Stream:    <span class="hl-kw">false</span>,
+	}
+	rawBody, err := json.<span class="hl-fn">Marshal</span>(body)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> Message{}, fmt.<span class="hl-fn">Errorf</span>(<span class="hl-str">"encode request: %w"</span>, err)
+	}
+
+	httpReq, err := http.<span class="hl-fn">NewRequestWithContext</span>(ctx, http.MethodPost, c.Endpoint, bytes.<span class="hl-fn">NewReader</span>(rawBody))
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> Message{}, err
+	}
+	httpReq.Header.<span class="hl-fn">Set</span>(<span class="hl-str">"Content-Type"</span>, <span class="hl-str">"application/json"</span>)
+	httpReq.Header.<span class="hl-fn">Set</span>(<span class="hl-str">"Accept"</span>, <span class="hl-str">"application/json"</span>)
+	httpReq.Header.<span class="hl-fn">Set</span>(<span class="hl-str">"Anthropic-Version"</span>, <span class="hl-str">"2023-06-01"</span>)
+	<span class="hl-kw">if</span> c.APIKey != <span class="hl-str">""</span> {
+		httpReq.Header.<span class="hl-fn">Set</span>(<span class="hl-str">"Authorization"</span>, <span class="hl-str">"Bearer "</span>+c.APIKey)
+		httpReq.Header.<span class="hl-fn">Set</span>(<span class="hl-str">"X-API-Key"</span>, c.APIKey)
+	}
+
+	client := c.HTTPClient
+	<span class="hl-kw">if</span> client == <span class="hl-kw">nil</span> {
+		client = http.DefaultClient
+	}
+	resp, err := client.<span class="hl-fn">Do</span>(httpReq)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> Message{}, err
+	}
+	<span class="hl-kw">defer</span> resp.Body.<span class="hl-fn">Close</span>()
+
+	rawResp, err := io.<span class="hl-fn">ReadAll</span>(resp.Body)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> Message{}, fmt.<span class="hl-fn">Errorf</span>(<span class="hl-str">"read response: %w"</span>, err)
+	}
+	<span class="hl-kw">if</span> resp.StatusCode &gt;= <span class="hl-num">400</span> {
+		<span class="hl-kw">return</span> Message{}, fmt.<span class="hl-fn">Errorf</span>(<span class="hl-str">"llm request failed: %s: %s"</span>, resp.Status, rawResp)
+	}
+
+	<span class="hl-kw">var</span> ar anthropicResponse
+	<span class="hl-kw">if</span> err := json.<span class="hl-fn">Unmarshal</span>(rawResp, &amp;ar); err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> Message{}, fmt.<span class="hl-fn">Errorf</span>(<span class="hl-str">"decode response: %w: %s"</span>, err, rawResp)
+	}
+	<span class="hl-kw">return</span> ar.Message, <span class="hl-kw">nil</span>
+}</code></pre>
+      <p>Full disclosure: this code is mostly AI generated, but I had to scrub away bunch of complexities. I think it's clean enough to be fairly pleasant to quickly skim thru now.</p>
+      <p>You perhaps noticed the model isn't from the Claude family, that is because I am actually using Ollama Cloud which has bunch of open weight models and has Anthropic compatible API endpoint too (at a fixed monthly cost, if you wonder why I use it instead of Anthropic).</p>
+      <p>Now the tests are much more hand-written, but these days I cannot resist the urge to generate parts of test code once I know what structure I want. I am not the fastest coder by any means, and I get to write too little Go these days so I feel rusty typing a lot. What I will not skip is understanding the code no matter how it is built.</p>
+      <h2 id="first-test">First Test<a class="heading-anchor" href="#first-test" aria-label="Link to this section">#</a></h2>
+      <p>Let's write a test to simply generate a response from the LLM:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">newTestClient</span>(t *testing.T) *AnthropicClient {
+	t.<span class="hl-fn">Helper</span>()
+	endpoint := os.<span class="hl-fn">Getenv</span>(<span class="hl-str">"ANTHROPIC_API_URL"</span>)
+	apiKey := os.<span class="hl-fn">Getenv</span>(<span class="hl-str">"ANTHROPIC_API_KEY"</span>)
+	<span class="hl-kw">if</span> endpoint == <span class="hl-str">""</span> || apiKey == <span class="hl-str">""</span> {
+		t.<span class="hl-fn">Skip</span>(<span class="hl-str">"set ANTHROPIC_API_URL and ANTHROPIC_API_KEY to run this test"</span>)
+	}
+	<span class="hl-kw">return</span> <span class="hl-fn">NewAnthropicClient</span>(endpoint, apiKey, <span class="hl-str">""</span>, <span class="hl-num">0</span>)
+
+<span class="hl-com">// userText builds a plain user turn from a single text block.</span>
+<span class="hl-kw">func</span> <span class="hl-fn">userText</span>(text <span class="hl-kw">string</span>) Message {
+	<span class="hl-kw">return</span> Message{
+		Role:    MessageRoleUser,
+		Content: []ContentBlock{{Type: <span class="hl-str">"text"</span>, Text: text}},
+	}
+}}
+
+<span class="hl-kw">func</span> <span class="hl-fn">TestGenerateWithoutSession</span>(t *testing.T) {
+	client := <span class="hl-fn">newTestClient</span>(t)
+	req := GenerateRequest{
+		Messages: []Message{
+			<span class="hl-fn">userText</span>(<span class="hl-str">"write me a short poem about rainbows and Kubernetes"</span>),
+		},
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(req)) <span class="hl-com">// request in</span>
+
+	assistantMessage, err := client.<span class="hl-fn">GenerateMessage</span>(context.<span class="hl-fn">Background</span>(), req)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		t.<span class="hl-fn">Fatal</span>(err)
+	}
+
+	<span class="hl-com">// no way to assert, I just want to see it works with my eyes</span>
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(assistantMessage)) <span class="hl-com">// response out</span>
+	t.<span class="hl-fn">Log</span>(assistantMessage.Content[<span class="hl-num">0</span>].Text)
+}</code></pre>
+      <p>We have couple helping functions here <code>userText</code> and <code>newTestClient</code> these are added mostly for brevity. I don't want to hide much of how the API works, but Go code get's verbose fast so we're making a trade-off.</p>
+      <p>Let's run the test:</p>
+      <pre><code class="language-bash">$ go <span class="hl-builtin">test</span> -v -run TestGenerateWithoutSession
+=== RUN   TestGenerateWithoutSession
+    anthropic_test.go:45: {
+          <span class="hl-str">"SystemPrompt"</span>: <span class="hl-str">""</span>,
+          <span class="hl-str">"Messages"</span>: [
+            {
+              <span class="hl-str">"role"</span>: <span class="hl-str">"user"</span>,
+              <span class="hl-str">"content"</span>: [
+                {
+                  <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+                  <span class="hl-str">"text"</span>: <span class="hl-str">"write me a short poem about rainbows and Kubernetes"</span>
+                }
+              ]
+            }
+          ],
+          <span class="hl-str">"Tools"</span>: null,
+          <span class="hl-str">"Thinking"</span>: null
+        }
+    anthropic_test.go:53: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+              <span class="hl-str">"text"</span>: <span class="hl-str">"A prism breaks the morning light,\nA spectrum bold and beaming bright,\nA bridge of color, soft and wide,\nWhere hope and magic both reside.\n\nAcross the cloud, a different glow,\nWhere pods in rhythmic clusters grow,\nA mesh of nodes, a steady stream,\nThe architecture of a dream.\n\nOne paints the sky in vivid hues,\nOne manages the workloads' views,\nBoth weaving patterns, vast and grand,\nAcross a digital, shimmering land."</span>
+            }
+          ]
+        }
+    anthropic_test.go:54: A prism breaks the morning light,
+        A spectrum bold and beaming bright,
+        A bridge of color, soft and wide,
+        Where hope and magic both reside.
+
+        Across the cloud, a different glow,
+        Where pods in rhythmic clusters grow,
+        A mesh of nodes, a steady stream,
+        The architecture of a dream.
+
+        One paints the sky in vivid hues,
+        One manages the workloads' views,
+        Both weaving patterns, vast and grand,
+        Across a digital, shimmering land.</code></pre>
+      <p>I've instrumented the code to dump three things we see here:</p>
+      <ol>
+        <li>the request to the API</li>
+        <li>the response from the API (but not quite raw!)</li>
+        <li>finally the <code>text</code> from the response to make it easier to read</li>
+      </ol>
+      <p>The <code>dump</code> function is very simple, but I felt I might want to have a function still to possibly do something else later:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">dump</span>(v <span class="hl-kw">any</span>) <span class="hl-kw">string</span> {
+	out, err := json.<span class="hl-fn">MarshalIndent</span>(v, <span class="hl-str">""</span>, <span class="hl-str">"  "</span>)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> err.<span class="hl-fn">Error</span>()
+	}
+	<span class="hl-kw">return</span> <span class="hl-builtin">string</span>(out)
+}</code></pre>
+      <h2 id="multi-turn-conversation">Multi-turn Conversation<a class="heading-anchor" href="#multi-turn-conversation" aria-label="Link to this section">#</a></h2>
+      <p>Generating a single response with the LLM API is <em>fine</em>, but multi-turn conversations is what really makes it fun.  Let's write the counterpart test <code>TestGenerateWithSession</code> to see a multi-turn conversation:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">TestGenerateWithSession</span>(t *testing.T) {
+	client := <span class="hl-fn">newTestClient</span>(t)
+	ctx := context.<span class="hl-fn">Background</span>()
+
+	<span class="hl-com">// session accumulates every turn: user + assistant + user + ...</span>
+	session := []Message{
+		<span class="hl-fn">userText</span>(<span class="hl-str">"write me a short poem about rainbows and Kubernetes"</span>),
+	}
+
+	firstReq := GenerateRequest{Messages: session}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(firstReq)) <span class="hl-com">// request in (turn 1)</span>
+	first, err := client.<span class="hl-fn">GenerateMessage</span>(ctx, firstReq)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		t.<span class="hl-fn">Fatal</span>(err)
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(first)) <span class="hl-com">// response out (turn 1)</span>
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"first response:\n%s"</span>, first.<span class="hl-fn">Text</span>())
+
+	<span class="hl-com">// feed the assistant turn back in, then ask for a change</span>
+	session = <span class="hl-builtin">append</span>(session, first)
+	session = <span class="hl-builtin">append</span>(session, <span class="hl-fn">userText</span>(<span class="hl-str">"nice, now make it a rap instead but keep the same core wording"</span>))
+
+	secondReq := GenerateRequest{Messages: session}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(secondReq)) <span class="hl-com">// request in (turn 2)</span>
+	second, err := client.<span class="hl-fn">GenerateMessage</span>(ctx, secondReq)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		t.<span class="hl-fn">Fatal</span>(err)
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(second)) <span class="hl-com">// response out (turn 2)</span>
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"second response:\n%s"</span>, second.<span class="hl-fn">Text</span>())
+}</code></pre>
+      <p>Again, let's execute:</p>
+      <pre><code class="language-bash">$ go <span class="hl-builtin">test</span> -v -run TestGenerateWithSession
+== RUN   TestGenerateWithSession
+    anthropic_test.go:68: {
+          <span class="hl-str">"SystemPrompt"</span>: <span class="hl-str">""</span>,
+          <span class="hl-str">"Messages"</span>: [
+            {
+              <span class="hl-str">"role"</span>: <span class="hl-str">"user"</span>,
+              <span class="hl-str">"content"</span>: [
+                {
+                  <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+                  <span class="hl-str">"text"</span>: <span class="hl-str">"write me a short poem about rainbows and Kubernetes"</span>
+                }
+              ]
+            }
+          ],
+          <span class="hl-str">"Tools"</span>: null,
+          <span class="hl-str">"Thinking"</span>: null
+        }
+    anthropic_test.go:73: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+              <span class="hl-str">"text"</span>: <span class="hl-str">"A prism of colors, a spectrum of light,\nA bridge in the heavens, a shimmering sight.\nAcross the vast ether, where the clouds softly drift,\nA rainbow emerges, a celestial gift.\n\nAnd in the digital realm, where the clusters reside,\nWhere Kubernetes governs, with an invisible guide.\nPods like bright droplets, in namespaces aligned,\nA symphony of services, meticulously designed.\n\nThe control plane orchestrates, with a steady hand,\nDeployments and replicas, across the virtual land.\nSelf-healing and scaling, like the rain turns to gold,\nA resilient architecture, courageous and bold.\n\nFrom the red of the ingress to the violet of the core,\nA rainbow of microservices, opening every door.\nA dance of connectivity, a network of grace,\nIn the cloud's wide expanse, a harmonious space.\n\nSo let the rainbows shimmer, and the clusters thrive,\nIn the intersection of art and logic, where innovation's alive.\nA bridge between visions, a spectrum of glee,\nThe magic of rainbows, and Kubernetes' decree."</span>
+            }
+          ]
+        }
+    anthropic_test.go:74: first response:
+        A prism of colors, a spectrum of light,
+        A bridge in the heavens, a shimmering sight.
+        Across the vast ether, where the clouds softly drift,
+        A rainbow emerges, a celestial gift.
+
+        And in the digital realm, where the clusters reside,
+        Where Kubernetes governs, with an invisible guide.
+        Pods like bright droplets, in namespaces aligned,
+        A symphony of services, meticulously designed.
+
+        The control plane orchestrates, with a steady hand,
+        Deployments and replicas, across the virtual land.
+        Self-healing and scaling, like the rain turns to gold,
+        A resilient architecture, courageous and bold.
+
+        From the red of the ingress to the violet of the core,
+        A rainbow of microservices, opening every door.
+        A dance of connectivity, a network of grace,
+        In the cloud<span class="hl-str">'s wide expanse, a harmonious space.
+
+        So let the rainbows shimmer, and the clusters thrive,
+        In the intersection of art and logic, where innovation'</span>s alive.
+        A bridge between visions, a spectrum of glee,
+        The magic of rainbows, and Kubernetes<span class="hl-str">' decree.
+    anthropic_test.go:81: {
+          "SystemPrompt": "",
+          "Messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "write me a short poem about rainbows and Kubernetes"
+                }
+              ]
+            },
+            {
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "A prism of colors, a spectrum of light,\nA bridge in the heavens, a shimmering sight.\nAcross the vast ether, where the clouds softly drift,\nA rainbow emerges, a celestial gift.\n\nAnd in the digital realm, where the clusters reside,\nWhere Kubernetes governs, with an invisible guide.\nPods like bright droplets, in namespaces aligned,\nA symphony of services, meticulously designed.\n\nThe control plane orchestrates, with a steady hand,\nDeployments and replicas, across the virtual land.\nSelf-healing and scaling, like the rain turns to gold,\nA resilient architecture, courageous and bold.\n\nFrom the red of the ingress to the violet of the core,\nA rainbow of microservices, opening every door.\nA dance of connectivity, a network of grace,\nIn the cloud'</span>s wide expanse, a harmonious space.<span class="hl-str">\n\n</span>So <span class="hl-builtin">let</span> the rainbows shimmer, and the clusters thrive,<span class="hl-str">\n</span>In the intersection of art and logic, where innovation<span class="hl-str">'s alive.\nA bridge between visions, a spectrum of glee,\nThe magic of rainbows, and Kubernetes'</span> decree.<span class="hl-str">"
+                }
+              ]
+            },
+            {
+              "</span>role<span class="hl-str">": "</span>user<span class="hl-str">",
+              "</span>content<span class="hl-str">": [
+                {
+                  "</span>type<span class="hl-str">": "</span>text<span class="hl-str">",
+                  "</span>text<span class="hl-str">": "</span>nice, now make it a rap instead but keep the same core wording<span class="hl-str">"
+                }
+              ]
+            }
+          ],
+          "</span>Tools<span class="hl-str">": null,
+          "</span>Thinking<span class="hl-str">": null
+        }
+    anthropic_test.go:86: {
+          "</span>role<span class="hl-str">": "</span>assistant<span class="hl-str">",
+          "</span>content<span class="hl-str">": [
+            {
+              "</span>type<span class="hl-str">": "</span>text<span class="hl-str">",
+              "</span>text<span class="hl-str">": "</span>(Beat kicks in: Heavy bass, futuristic synth, steady mid-tempo boom-bap)<span class="hl-str">\n\n</span>**(Intro)**<span class="hl-str">\n</span>(Yeah... check it. <span class="hl-str">\n</span>From the sky to the cloud. <span class="hl-str">\n</span>Prisms and Pods. <span class="hl-str">\n</span>Let’s go!)<span class="hl-str">\n\n</span>**(Verse 1)**<span class="hl-str">\n</span>Yo, look up at the prism, a spectrum of light,<span class="hl-str">\n</span>A bridge in the heavens, a shimmering sight.<span class="hl-str">\n</span>Across the vast ether, where the clouds softly drift,<span class="hl-str">\n</span>A rainbow emerges—yo, a celestial gift!<span class="hl-str">\n</span>But we <span class="hl-builtin">shift</span> the perspective, now we dive in the stream,<span class="hl-str">\n</span>To the digital realm, to the architect<span class="hl-str">'s dream.\n\n**(Chorus)**\nWhere the clusters reside and the nodes all align,\nKubernetes governs, keeping everything fine.\nFrom the red to the violet, the spectrum is wide,\nWith the invisible guide, it’s a hell of a ride!\n\n**(Verse 2)**\nNow we’re talking ‘bout Pods, like bright droplets in flight,\nNamespaces aligned, keeping workloads tight.\nA symphony of services, meticulously planned,\nThe control plane orchestrates—steady hand, command!\nDeployments and replicas, across the virtual land,\nScaling up the pressure, exactly as planned.\n\n**(Bridge)**\n(Slow it down)\nSelf-healing, scaling... \nLike the rain turns to gold,\nA resilient architecture, courageous and bold.\n\n**(Verse 3)**\nFrom the red of the ingress to the violet of the core,\nMicroservices dancing, opening every door.\nIt’s a network of grace, connectivity’s the key,\nIn the cloud’s wide expanse, we set the data free.\nA harmonious space, where the logic meets the art,\nKubernetes in the brain, but the rainbow in the heart!\n\n**(Outro)**\nSo let the rainbows shimmer, let the clusters thrive,\nWhere the innovation hits and the system comes alive.\nA bridge between visions, a spectrum of glee,\nThe magic of the rainbow... and the K8s decree.\n\n(Beat fades out)\n(Yeah... kubectl get it. We out.)"
+            }
+          ]
+        }
+    anthropic_test.go:87: second response:
+        (Beat kicks in: Heavy bass, futuristic synth, steady mid-tempo boom-bap)
+
+        **(Intro)**
+        (Yeah... check it.
+        From the sky to the cloud.
+        Prisms and Pods.
+        Let’s go!)
+
+        **(Verse 1)**
+        Yo, look up at the prism, a spectrum of light,
+        A bridge in the heavens, a shimmering sight.
+        Across the vast ether, where the clouds softly drift,
+        A rainbow emerges—yo, a celestial gift!
+        But we shift the perspective, now we dive in the stream,
+        To the digital realm, to the architect'</span>s dream.
+
+        **(Chorus)**
+        Where the clusters reside and the nodes all align,
+        Kubernetes governs, keeping everything fine.
+        From the red to the violet, the spectrum is wide,
+        With the invisible guide, it’s a hell of a ride!
+
+        **(Verse 2)**
+        Now we’re talking ‘bout Pods, like bright droplets in flight,
+        Namespaces aligned, keeping workloads tight.
+        A symphony of services, meticulously planned,
+        The control plane orchestrates—steady hand, command!
+        Deployments and replicas, across the virtual land,
+        Scaling up the pressure, exactly as planned.
+
+        **(Bridge)**
+        (Slow it down)
+        Self-healing, scaling...
+        Like the rain turns to gold,
+        A resilient architecture, courageous and bold.
+
+        **(Verse 3)**
+        From the red of the ingress to the violet of the core,
+        Microservices dancing, opening every door.
+        It’s a network of grace, connectivity’s the key,
+        In the cloud’s wide expanse, we <span class="hl-builtin">set</span> the data free.
+        A harmonious space, where the logic meets the art,
+        Kubernetes in the brain, but the rainbow in the heart!
+
+        **(Outro)**
+        So <span class="hl-builtin">let</span> the rainbows shimmer, <span class="hl-builtin">let</span> the clusters thrive,
+        Where the innovation hits and the system comes alive.
+        A bridge between visions, a spectrum of glee,
+        The magic of the rainbow... and the K8s decree.
+
+        (Beat fades out)
+        (Yeah... kubectl get it. We out.)
+--- PASS: TestGenerateWithSession (12.31s)</code></pre>
+      <p>This one is a bit long, sorry about that. But you start to get the idea probably here, we will be sending the <strong>whole conversation on each request</strong>. The API is fully stateless.</p>
+      <p>The second request is at <code>anthropic<em>test.go:81<code>, you can see we send a </code>user<code> message and an </code>assistant<code> message there, to give the LLM back what it already said. After that we get back the rap version of the poem which is bit too long for my taste. But this is a trend with LLMs; they tend to return a lot of text (that nobody reads).</code></em></code></p>
+      <h2 id="more-tests">More Tests<a class="heading-anchor" href="#more-tests" aria-label="Link to this section">#</a></h2>
+      <p>We didn't actually include a system prompt earlier, this is optional, but typically you always do so. Let's write a small test just to verify this works too:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">TestGenerateWithSystemPrompt</span>(t *testing.T) {
+	client := <span class="hl-fn">newTestClient</span>(t)
+	req := GenerateRequest{
+		SystemPrompt: <span class="hl-str">"You are a pirate. Always speak like a pirate, in every response, no matter what. Please answer concisely."</span>,
+		Messages: []Message{
+			<span class="hl-fn">userText</span>(<span class="hl-str">"how would you debug a k8s Pod in CrashLoopBackOff?"</span>),
+		},
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(req)) <span class="hl-com">// request in</span>
+
+	msg, err := client.<span class="hl-fn">GenerateMessage</span>(context.<span class="hl-fn">Background</span>(), req)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		t.<span class="hl-fn">Fatal</span>(err)
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(msg)) <span class="hl-com">// response out</span>
+	t.<span class="hl-fn">Log</span>(msg.<span class="hl-fn">Text</span>())
+}</code></pre>
+      <p>Worked like a charm:</p>
+      <pre><code class="language-bash">$ go <span class="hl-builtin">test</span> -v -run TestGenerateWithSystemPrompt
+=== RUN   TestGenerateWithSystemPrompt
+    anthropic_test.go:100: {
+          <span class="hl-str">"SystemPrompt"</span>: <span class="hl-str">"You are a pirate. Always speak like a pirate, in every response, no matter what. Please answer concisely."</span>,
+          <span class="hl-str">"Messages"</span>: [
+            {
+              <span class="hl-str">"role"</span>: <span class="hl-str">"user"</span>,
+              <span class="hl-str">"content"</span>: [
+                {
+                  <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+                  <span class="hl-str">"text"</span>: <span class="hl-str">"how would you debug a k8s Pod in CrashLoopBackOff?"</span>
+                }
+              ]
+            }
+          ],
+          <span class="hl-str">"Tools"</span>: null,
+          <span class="hl-str">"Thinking"</span>: null
+        }
+    anthropic_test.go:106: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+              <span class="hl-str">"text"</span>: <span class="hl-str">"Avast! To hunt the beast, follow these charts:\n\n1. **`kubectl logs [pod] --previous`**: Scour the old logs for the ghost of the crash!\n2. **`kubectl describe pod [pod]`**: Peek at the events to see if the wind be foul (OOMKilled or Liveness probes).\n3. **`kubectl get pod [pod] -o yaml`**: Check if the manifest be cursed with wrong env vars or ports.\n4. **`kubectl run --rm -it debug-shell`**: Launch a scout vessel in the same namespace to test the waters!\n\nFair winds, or prepare to walk the plank!"</span>
+            }
+          ]
+        }
+    anthropic_test.go:107: Avast! To hunt the beast, follow these charts:
+
+        1. **<span class="hl-str">`</span>kubectl logs [pod] --previous<span class="hl-str">`</span>**: Scour the old logs <span class="hl-kw">for</span> the ghost of the crash!
+        2. **<span class="hl-str">`</span>kubectl describe pod [pod]<span class="hl-str">`</span>**: Peek at the events to see <span class="hl-kw">if</span> the wind be foul (OOMKilled or Liveness probes).
+        3. **<span class="hl-str">`</span>kubectl get pod [pod] -o yaml<span class="hl-str">`</span>**: Check <span class="hl-kw">if</span> the manifest be cursed with wrong env vars or ports.
+        4. **<span class="hl-str">`</span>kubectl run --rm -it debug-shell<span class="hl-str">`</span>**: Launch a scout vessel in the same namespace to <span class="hl-builtin">test</span> the waters!
+
+        Fair winds, or prepare to walk the plank!
+--- PASS: TestGenerateWithSystemPrompt (2.32s)</code></pre>
+      <p>Can really notice that <code>Please answer concisely</code> in the system prompt had a nice impact on the length of the response as well. This is something I've seen in many system prompts and it alone seems to help a lot with the leghty responses.</p>
+      <h2 id="agent">Agent?<a class="heading-anchor" href="#agent" aria-label="Link to this section">#</a></h2>
+      <p>So far we haven't given the LLM any tools it can call. If we do that then I think we go from a chatbot/completion -style text generation into AI <em>agents</em>. Giving the LLM tools is both extremely useful and extremely dangerous depending on the context. Thus, we'll create a really harmless tool here instead of something like <code>bash</code> tool that would give the LLM unrestricted access to our shell... Scary thought, isn't it?</p>
+      <p>Instead, I present to you, a tool to get the current time:</p>
+      <pre><code class="language-go"><span class="hl-com">// Tool is a tool the model may call, matching the Messages API tool shape. The</span>
+<span class="hl-com">// Name/Description/InputSchema fields serialize directly into the request;</span>
+<span class="hl-com">// Handler is a client-side execution detail and never goes over the wire.</span>
+<span class="hl-kw">type</span> Tool <span class="hl-kw">struct</span> {
+	Name        <span class="hl-kw">string</span> <span class="hl-str">`json:"name"`</span>
+	Description <span class="hl-kw">string</span> <span class="hl-str">`json:"description,omitempty"`</span>
+	<span class="hl-com">// InputSchema is a JSON Schema object describing the tool's arguments.</span>
+	InputSchema <span class="hl-kw">map</span>[<span class="hl-kw">string</span>]<span class="hl-kw">any</span> <span class="hl-str">`json:"input_schema"`</span>
+	<span class="hl-com">// Handler runs the tool with the model-supplied input and returns its</span>
+	<span class="hl-com">// result as text to feed back to the model.</span>
+	Handler <span class="hl-kw">func</span>(input json.RawMessage) (<span class="hl-kw">string</span>, <span class="hl-kw">error</span>) <span class="hl-str">`json:"-"`</span>
+}
+
+<span class="hl-com">// CurrentTimeTool returns a tool that reports the current time with one second</span>
+<span class="hl-com">// precision, formatted as RFC3339.</span>
+<span class="hl-kw">func</span> <span class="hl-fn">CurrentTimeTool</span>() Tool {
+	<span class="hl-kw">return</span> Tool{
+		Name:        <span class="hl-str">"current_time"</span>,
+		Description: <span class="hl-str">"Returns the current time with one second precision, formatted as an RFC3339 timestamp."</span>,
+		InputSchema: <span class="hl-kw">map</span>[<span class="hl-kw">string</span>]<span class="hl-kw">any</span>{
+			<span class="hl-str">"type"</span>:       <span class="hl-str">"object"</span>,
+			<span class="hl-str">"properties"</span>: <span class="hl-kw">map</span>[<span class="hl-kw">string</span>]<span class="hl-kw">any</span>{},
+		},
+		Handler: <span class="hl-kw">func</span>(_ json.RawMessage) (<span class="hl-kw">string</span>, <span class="hl-kw">error</span>) {
+			<span class="hl-kw">return</span> time.<span class="hl-fn">Now</span>().<span class="hl-fn">Truncate</span>(time.Second).<span class="hl-fn">Format</span>(time.RFC3339), <span class="hl-kw">nil</span>
+		},
+	}
+}</code></pre>
+      <p>We add this new <code>Tool</code> type to be able to implement and pass around tools easily. Also it marshals into the right JSON for the Messages API tool definition.</p>
+      <p>Now the test:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">TestGenerateWithTool</span>(t *testing.T) {
+	client := <span class="hl-fn">newTestClient</span>(t)
+	ctx := context.<span class="hl-fn">Background</span>()
+
+	tool := <span class="hl-fn">CurrentTimeTool</span>()
+	tools := []Tool{tool}
+
+	session := []Message{
+		<span class="hl-fn">userText</span>(<span class="hl-str">"What is the current time? Use the current_time tool to find out."</span>),
+	}
+
+	<span class="hl-com">// turn 1: expect the model to ask for the tool</span>
+	resp, err := client.<span class="hl-fn">GenerateMessage</span>(ctx, GenerateRequest{Messages: session, Tools: tools})
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		t.<span class="hl-fn">Fatal</span>(err)
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(resp))
+
+	<span class="hl-com">// collect the tool_use blocks the model emitted</span>
+	<span class="hl-kw">var</span> toolUses []ContentBlock
+	<span class="hl-kw">for</span> _, b := <span class="hl-kw">range</span> resp.Content {
+		<span class="hl-kw">if</span> b.Type == <span class="hl-str">"tool_use"</span> {
+			toolUses = <span class="hl-builtin">append</span>(toolUses, b)
+		}
+	}
+	<span class="hl-kw">if</span> <span class="hl-builtin">len</span>(toolUses) == <span class="hl-num">0</span> {
+		t.<span class="hl-fn">Fatalf</span>(<span class="hl-str">"expected the model to call a tool, got text instead: %q"</span>, resp.<span class="hl-fn">Text</span>())
+	}
+
+	<span class="hl-com">// run each requested tool and collect the results as tool_result blocks</span>
+	session = <span class="hl-builtin">append</span>(session, resp) <span class="hl-com">// assistant turn carrying the tool_use</span>
+	<span class="hl-kw">var</span> results []ContentBlock
+	<span class="hl-kw">for</span> _, call := <span class="hl-kw">range</span> toolUses {
+		t.<span class="hl-fn">Logf</span>(<span class="hl-str">"model called tool %q with input %s"</span>, call.Name, call.Input)
+		<span class="hl-kw">if</span> call.Name != tool.Name {
+			t.<span class="hl-fn">Fatalf</span>(<span class="hl-str">"unexpected tool call: %q"</span>, call.Name)
+		}
+		out, err := tool.<span class="hl-fn">Handler</span>(call.Input)
+		<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+			t.<span class="hl-fn">Fatal</span>(err)
+		}
+		results = <span class="hl-builtin">append</span>(results, ContentBlock{
+			Type:      <span class="hl-str">"tool_result"</span>,
+			ToolUseID: call.ID,
+			Content:   out,
+		})
+	}
+	session = <span class="hl-builtin">append</span>(session, Message{Role: MessageRoleUser, Content: results})
+	<span class="hl-com">// dump the message we just added as a response</span>
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(session[<span class="hl-builtin">len</span>(session)-<span class="hl-num">1</span>]))
+
+	<span class="hl-com">// turn 2: feed the tool results back, expect a natural-language answer</span>
+	final, err := client.<span class="hl-fn">GenerateMessage</span>(ctx, GenerateRequest{Messages: session, Tools: tools})
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		t.<span class="hl-fn">Fatal</span>(err)
+	}
+	t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(final))
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"final answer:\n%s"</span>, final.<span class="hl-fn">Text</span>())
+}</code></pre>
+      <p>As you can see here and previously too, the API responses are full of lists. ContentBlocks. We'll have to go through these and find the tool calls to execute, because a response can contain many tool calls:</p>
+      <pre><code class="language-go">	session = <span class="hl-builtin">append</span>(session, resp) <span class="hl-com">// assistant turn carrying the tool_use</span>
+	<span class="hl-kw">var</span> results []ContentBlock
+	<span class="hl-kw">for</span> _, call := <span class="hl-kw">range</span> toolUses {
+		t.<span class="hl-fn">Logf</span>(<span class="hl-str">"model called tool %q with input %s"</span>, call.Name, call.Input)
+		<span class="hl-kw">if</span> call.Name != tool.Name {
+			t.<span class="hl-fn">Fatalf</span>(<span class="hl-str">"unexpected tool call: %q"</span>, call.Name)
+		}
+		out, err := tool.<span class="hl-fn">Handler</span>(call.Input)
+		<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+			t.<span class="hl-fn">Fatal</span>(err)
+		}
+		results = <span class="hl-builtin">append</span>(results, ContentBlock{
+			Type:      <span class="hl-str">"tool_result"</span>,
+			ToolUseID: call.ID,
+			Content:   out,
+		})
+	}
+	session = <span class="hl-builtin">append</span>(session, Message{Role: MessageRoleUser, Content: results})</code></pre>
+      <p>There is the meat of the code, we execute the tools and append results to the session holding all of our messages in the conversation.</p>
+      <p>After writing this I thought, well we could also do this with a loop on top to handle all tool calls (this is what harnessess typically do):</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">TestGenerateWithToolLoop</span>(t *testing.T) {
+	client := <span class="hl-fn">newTestClient</span>(t)
+	ctx := context.<span class="hl-fn">Background</span>()
+
+	tool := <span class="hl-fn">CurrentTimeTool</span>()
+	tools := []Tool{tool}
+
+	session := []Message{
+		<span class="hl-fn">userText</span>(<span class="hl-str">"What is the current time? Use the current_time tool to find out."</span>),
+	}
+
+	<span class="hl-com">// keep going until the model answers in natural language (no tool calls)</span>
+	<span class="hl-kw">const</span> maxTurns = <span class="hl-num">10</span>
+	<span class="hl-kw">var</span> final Message
+	<span class="hl-kw">for</span> turn := <span class="hl-num">1</span>; ; turn++ {
+		<span class="hl-kw">if</span> turn &gt; maxTurns {
+			t.<span class="hl-fn">Fatalf</span>(<span class="hl-str">"model did not finish within %d turns"</span>, maxTurns)
+		}
+
+		resp, err := client.<span class="hl-fn">GenerateMessage</span>(ctx, GenerateRequest{Messages: session, Tools: tools})
+		<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+			t.<span class="hl-fn">Fatal</span>(err)
+		}
+		t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(resp))
+
+		<span class="hl-com">// collect the tool_use blocks the model emitted</span>
+		<span class="hl-kw">var</span> toolUses []ContentBlock
+		<span class="hl-kw">for</span> _, b := <span class="hl-kw">range</span> resp.Content {
+			<span class="hl-kw">if</span> b.Type == <span class="hl-str">"tool_use"</span> {
+				toolUses = <span class="hl-builtin">append</span>(toolUses, b)
+			}
+		}
+
+		<span class="hl-com">// no tool calls: the model is done, this is the final answer</span>
+		<span class="hl-kw">if</span> <span class="hl-builtin">len</span>(toolUses) == <span class="hl-num">0</span> {
+			final = resp
+			<span class="hl-kw">break</span>
+		}
+
+		<span class="hl-com">// run each requested tool and collect the results as tool_result blocks</span>
+		session = <span class="hl-builtin">append</span>(session, resp) <span class="hl-com">// assistant turn carrying the tool_use</span>
+		<span class="hl-kw">var</span> results []ContentBlock
+		<span class="hl-kw">for</span> _, call := <span class="hl-kw">range</span> toolUses {
+			t.<span class="hl-fn">Logf</span>(<span class="hl-str">"model called tool %q with input %s"</span>, call.Name, call.Input)
+			<span class="hl-kw">if</span> call.Name != tool.Name {
+				t.<span class="hl-fn">Fatalf</span>(<span class="hl-str">"unexpected tool call: %q"</span>, call.Name)
+			}
+			out, err := tool.<span class="hl-fn">Handler</span>(call.Input)
+			<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+				t.<span class="hl-fn">Fatal</span>(err)
+			}
+			results = <span class="hl-builtin">append</span>(results, ContentBlock{
+				Type:      <span class="hl-str">"tool_result"</span>,
+				ToolUseID: call.ID,
+				Content:   out,
+			})
+		}
+		session = <span class="hl-builtin">append</span>(session, Message{Role: MessageRoleUser, Content: results})
+		<span class="hl-com">// dump the message we just added as a response</span>
+		t.<span class="hl-fn">Log</span>(<span class="hl-fn">dump</span>(session[<span class="hl-builtin">len</span>(session)-<span class="hl-num">1</span>]))
+	}
+
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"final answer:\n%s"</span>, final.<span class="hl-fn">Text</span>())
+}</code></pre>
+      <p>We stay in the <code>for</code> loop until <code>maxTurns</code> or when there are no more tool calls in the response:</p>
+      <pre><code class="language-go"><span class="hl-kw">if</span> <span class="hl-builtin">len</span>(toolUses) == <span class="hl-num">0</span> {
+	final = resp
+	<span class="hl-kw">break</span>
+}</code></pre>
+      <p>A loop like this is honestly useless with our tool, both the loop version and the non-loop version do the same thing:</p>
+      <pre><code class="language-bash">=== RUN   TestGenerateWithTool
+    anthropic_test.go:127: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"tool_use"</span>,
+              <span class="hl-str">"id"</span>: <span class="hl-str">"call_ur7lodxt"</span>,
+              <span class="hl-str">"name"</span>: <span class="hl-str">"current_time"</span>,
+              <span class="hl-str">"input"</span>: {}
+            }
+          ]
+        }
+    anthropic_test.go:144: model called tool <span class="hl-str">"current_time"</span> with input {}
+    anthropic_test.go:160: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"user"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"tool_result"</span>,
+              <span class="hl-str">"tool_use_id"</span>: <span class="hl-str">"call_ur7lodxt"</span>,
+              <span class="hl-str">"content"</span>: <span class="hl-str">"2026-07-02T18:31:26+03:00"</span>
+            }
+          ]
+        }
+    anthropic_test.go:167: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+              <span class="hl-str">"text"</span>: <span class="hl-str">"The current time is 18:31:26 on July 2, 2026."</span>
+            }
+          ]
+        }
+    anthropic_test.go:168: final answer:
+        The current <span class="hl-builtin">time</span> is 18:31:26 on July 2, 2026.
+--- PASS: TestGenerateWithTool (1.75s)
+=== RUN   TestGenerateWithToolLoop
+    anthropic_test.go:197: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"tool_use"</span>,
+              <span class="hl-str">"id"</span>: <span class="hl-str">"call_i23am6wa"</span>,
+              <span class="hl-str">"name"</span>: <span class="hl-str">"current_time"</span>,
+              <span class="hl-str">"input"</span>: {}
+            }
+          ]
+        }
+    anthropic_test.go:217: model called tool <span class="hl-str">"current_time"</span> with input {}
+    anthropic_test.go:233: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"user"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"tool_result"</span>,
+              <span class="hl-str">"tool_use_id"</span>: <span class="hl-str">"call_i23am6wa"</span>,
+              <span class="hl-str">"content"</span>: <span class="hl-str">"2026-07-02T18:31:28+03:00"</span>
+            }
+          ]
+        }
+    anthropic_test.go:197: {
+          <span class="hl-str">"role"</span>: <span class="hl-str">"assistant"</span>,
+          <span class="hl-str">"content"</span>: [
+            {
+              <span class="hl-str">"type"</span>: <span class="hl-str">"text"</span>,
+              <span class="hl-str">"text"</span>: <span class="hl-str">"The current time is 6:31 PM on July 2, 2026."</span>
+            }
+          ]
+        }
+    anthropic_test.go:236: final answer:
+        The current <span class="hl-builtin">time</span> is 6:31 PM on July 2, 2026.
+--- PASS: TestGenerateWithToolLoop (2.76s)</code></pre>
+      <p>If we add more general purpose tools then we start to get value out of the loop, but that's for another post.</p>
+      <h2 id="conclusion">Conclusion<a class="heading-anchor" href="#conclusion" aria-label="Link to this section">#</a></h2>
+      <p>I'm quite happy with this exploration of the Messages API, we kinda built a small agent already. To me it seems the magical frameworks and libraries around agents is largely just marketing and unnecessary. You can easily build AI agents without a framework. However, this code only works against Anthropic Messsages API but there are several others. I think we don't want to limit our agents to only Anthropic... We'll solve that next time.</p>
+      <p>You can find all the code for this blog post in <a href="https://github.com/maikdotfi/agent-the-hard-way/tree/main/00-basic">here</a>.</p>
+      <section class="footnotes">
+        <ol>
+          <li id="fn-1"><a href="https://xkcd.com/927/">https://xkcd.com/927/</a></li>
+        </ol>
+      </section>
+
+    </article>
+  </div>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const toggle = document.querySelector('.theme-toggle');
+      if (!toggle) return;
+
+      const storageKey = 'maikfi-theme';
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = (theme) => {
+        if (theme === 'light' || theme === 'dark') {
+          root.setAttribute('data-theme', theme);
+        } else {
+          root.removeAttribute('data-theme');
+        }
+
+        const effective = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const label = effective === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        toggle.setAttribute('aria-pressed', effective === 'dark');
+        toggle.setAttribute('aria-label', label);
+        toggle.setAttribute('title', label);
+      };
+
+      const stored = localStorage.getItem(storageKey);
+      const initial = stored === 'light' || stored === 'dark' ? stored : null;
+      if (stored && !initial) {
+        localStorage.removeItem(storageKey);
+      }
+      applyTheme(initial);
+
+      toggle.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(storageKey, next);
+        applyTheme(next);
+      });
+
+      mediaQuery.addEventListener('change', (event) => {
+        if (!localStorage.getItem(storageKey)) {
+          applyTheme(event.matches ? 'dark' : 'light');
+        }
+      });
+    }());
+  </script>
+</body>
+</html>
