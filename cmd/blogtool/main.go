@@ -610,6 +610,17 @@ func renderInline(input string) string {
 	}
 
 	for i := 0; i < len(input); {
+		// Inside an inline code span only the closing backtick is special;
+		// everything else (including _, *, [ and !) is literal text.
+		if len(stack) > 0 && stack[len(stack)-1].tag == "code" && input[i] != '`' {
+			_, size := utf8.DecodeRuneInString(input[i:])
+			if size < 1 {
+				size = 1
+			}
+			emit(escapeText(input[i : i+size]))
+			i += size
+			continue
+		}
 		switch {
 		case strings.HasPrefix(input[i:], "**"):
 			if len(stack) > 0 && stack[len(stack)-1].tag == "strong" {

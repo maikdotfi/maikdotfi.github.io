@@ -859,7 +859,7 @@
         (Yeah... kubectl get it. We out.)
 --- PASS: TestGenerateWithSession (12.31s)</code></pre>
       <p>This one is a bit long, sorry about that. But you start to get the idea probably here, we will be sending the <strong>whole conversation on each request</strong>. The API is fully stateless.</p>
-      <p>The second request is at <code>anthropic<em>test.go:81<code>, you can see we send a </code>user<code> message and an </code>assistant<code> message there, to give the LLM back what it already said. After that we get back the rap version of the poem which is bit too long for my taste. But this is a trend with LLMs; they tend to return a lot of text (that nobody reads).</code></em></code></p>
+      <p>The second request is at <code>anthropic_test.go:81</code> , you can see we send a <code>user</code> message and an <code>assistant</code> message there, to give the LLM back what it already said. After that we get back the rap version of the poem which is bit too long for my taste. But this is a trend with LLMs; they tend to return a lot of text (that nobody reads).</p>
       <h2 id="more-tests">More Tests<a class="heading-anchor" href="#more-tests" aria-label="Link to this section">#</a></h2>
       <p>We didn't actually include a system prompt earlier, this is optional, but typically you always do so. Let's write a small test just to verify this works too:</p>
       <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">TestGenerateWithSystemPrompt</span>(t *testing.T) {
