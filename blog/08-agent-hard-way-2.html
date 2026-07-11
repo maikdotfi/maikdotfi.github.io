@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent The Hard Way: Fantasy | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f1ea;
+      --bg-tint: #ece7dc;
+      --fg: #1c1a16;
+      --muted-fg: #756f63;
+      --accent: #b14a26;
+      --rule: #d8d2c4;
+      --code-bg: #ede7d8;
+      --code-border: #dad1bd;
+      --tok-com: #8a8372;
+      --tok-kw: #9c3d1f;
+      --tok-str: #4f6a2e;
+      --tok-num: #8a5a12;
+      --tok-fn: #345b6b;
+      --tok-builtin: #7a4a86;
+      --display: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+        --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+        --code-bg: #24241c; --code-border: #33332a;
+        --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+        --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f1ea; --bg-tint: #ece7dc; --fg: #1c1a16;
+      --muted-fg: #756f63; --accent: #b14a26; --rule: #d8d2c4;
+      --code-bg: #ede7d8; --code-border: #dad1bd;
+      --tok-com: #8a8372; --tok-kw: #9c3d1f; --tok-str: #4f6a2e;
+      --tok-num: #8a5a12; --tok-fn: #345b6b; --tok-builtin: #7a4a86;
+      color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+      --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+      --code-bg: #24241c; --code-border: #33332a;
+      --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+      --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      color: var(--fg);
+      font-family: var(--body);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      max-width: 50rem;
+      margin: 0 auto;
+      padding: clamp(2rem, 5vw, 3.5rem) 1.6rem 6rem;
+    }
+
+     
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+    }
+
+    .nav-links { display: flex; gap: 1.5rem; align-items: baseline; }
+
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      transition: color 180ms ease;
+    }
+
+    nav a:hover,
+    nav a:focus-visible { color: var(--accent); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--muted-fg);
+      cursor: pointer;
+      transition: color 180ms ease, transform 300ms ease;
+    }
+
+    .theme-toggle svg { width: 1.6rem; height: 1.6rem; }
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible { color: var(--accent); transform: rotate(-12deg); }
+    .theme-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+     
+    article { margin-top: clamp(3rem, 7vw, 5rem); }
+
+    article > header {
+      margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 750;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.2rem;
+      max-width: 18ch;
+    }
+
+    .meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+      margin: 0;
+    }
+
+    .tags {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .tag::before { content: "#"; opacity: 0.45; margin-right: 0.15em; }
+
+     
+    article > p,
+    article > ul,
+    article > blockquote,
+    article > pre,
+    article > h2,
+    article > h3,
+    article > h4 {
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: 120ms;
+    }
+
+    article p { margin: 1.4rem 0; }
+
+    article > p:first-of-type { margin-top: 0; }
+
+    article > p:first-of-type::first-letter {
+      font-family: var(--display);
+      font-weight: 750;
+      float: left;
+      font-size: 3.8rem;
+      line-height: 0.78;
+      padding: 0.05em 0.1em 0 0;
+      color: var(--accent);
+    }
+
+    h2, h3, h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 2.6rem 0 0.9rem;
+    }
+
+    h2 { font-size: 1.65rem; }
+    h3 { font-size: 1.3rem; }
+    h4 { font-size: 1.1rem; }
+
+     
+    .heading-anchor {
+      margin-left: 0.35em;
+      color: var(--muted-fg);
+      font-weight: 400;
+      text-decoration: none;
+      background: none;
+      opacity: 0;
+      transition: opacity 160ms ease, color 160ms ease;
+    }
+    h2:hover .heading-anchor,
+    h3:hover .heading-anchor,
+    h4:hover .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 0.65; }
+    .heading-anchor:hover { opacity: 1; color: var(--accent); }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: 100% 1px;
+      background-position: 0 1.15em;
+      background-repeat: no-repeat;
+      transition: background-position 160ms ease, opacity 160ms ease;
+    }
+
+    a:hover,
+    a:focus-visible { opacity: 0.7; }
+
+    article ul {
+      margin: 1.4rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    article ol {
+      margin: 1.4rem 0;
+      padding-left: 1.6rem;
+    }
+
+    article li {
+      margin: 0.5rem 0;
+    }
+
+    article ul li {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    article ol li::marker {
+      color: var(--accent);
+    }
+
+    article ul li::before {
+      content: "";
+      position: absolute;
+      left: 0.1rem;
+      top: 0.72em;
+      width: 0.4rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    article pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-left: 2px solid var(--accent);
+      border-radius: 0;
+      padding: 1.2rem 1.3rem;
+      overflow-x: auto;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      margin: 1.8rem 0;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.86em;
+    }
+
+     
+    article pre code { font-size: 1em; }
+
+     
+    article pre .hl-com     { color: var(--tok-com); font-style: italic; }
+    article pre .hl-kw      { color: var(--tok-kw); }
+    article pre .hl-str     { color: var(--tok-str); }
+    article pre .hl-num     { color: var(--tok-num); }
+    article pre .hl-fn      { color: var(--tok-fn); }
+    article pre .hl-builtin { color: var(--tok-builtin); }
+
+    article p code,
+    article li code {
+      background: var(--code-bg);
+      padding: 0.12rem 0.4rem;
+      border-radius: 0;
+    }
+
+    article img {
+      max-width: 50%;
+      height: auto;
+      border-radius: 0;
+      margin: 2rem auto;
+      display: block;
+    }
+
+    article img.img-small { max-width: 30%; }
+    article img.img-wide { max-width: 80%; }
+    article img.img-full { max-width: 100%; }
+
+    article blockquote {
+      margin: 2rem 0;
+      padding: 0 0 0 2.2rem;
+      position: relative;
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.35rem;
+      line-height: 1.45;
+      color: var(--fg);
+    }
+
+    article blockquote::before {
+      content: "\201C";
+      position: absolute;
+      left: -0.1rem;
+      top: 0.35rem;
+      font-family: var(--display);
+      font-size: 3.4rem;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    article blockquote p { margin: 0; }
+
+    .footnotes {
+      border-top: 1px solid var(--rule);
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      font-size: 0.92rem;
+      color: var(--muted-fg);
+    }
+
+    .footnotes ol { margin: 0; padding-left: 1.3rem; }
+    .footnotes li { line-height: 1.6; margin: 0.4rem 0; }
+
+    sup a { background: none; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="nav-links">
+        <a href="index.html">← All writing</a>
+        <a href="../index.html">maik.fi</a>
+      </div>
+      <button type="button" class="theme-toggle" aria-pressed="false" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 256 256" aria-hidden="true">
+          <rect width="256" height="256" fill="none"/>
+          <polygon points="64 40 192 40 240 152 16 152 64 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="128" y1="152" x2="128" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="96" y1="216" x2="160" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="200" y1="152" x2="200" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+        </svg>
+      </button>
+    </nav>
+    <article>
+      <header>
+        <h1>Agent The Hard Way: Fantasy</h1>
+        <p class="meta">
+          <time datetime="2026-07-11">July 11, 2026</time> — by Mike
+        </p>
+        <div class="tags"><span class="tag">hard way</span><span class="tag">agentic coding</span><span class="tag">llms</span>
+        </div>
+      </header>
+      <p>Alright so in the last post we were rawdogging the Anthropic API, no SDK and no way to use OpenAI GPT models nor Google Gemini models. But we're going to change that.</p>
+      <p>The thing is though, I am not in the mood to start writing bunch of code to deal with all these different providers and more-or-less <em>compatible</em> APIs in addition to the official APIs. So instead I went hunting for a library that handles this business for me. I was already aware that there is a coding agent written in Go by the lovely <a href="https://charm.land/">charm</a> folks that have built extremely cool and useful TUI libraries (and more!). Their CLI agent is called <a href="https://github.com/charmbracelet/crush">crush</a> and it's actually fairly popular one although sadly I've not been using it (planning to change that).</p>
+      <p>I was super happy to find that <code>crush</code> has a lovely dependency called <a href="https://github.com/charmbracelet/fantasy">fantasy</a> which the <code>crush</code> CLI builds upon. Sounds fantastic, eh?</p>
+      <h2 id="fantasy-agents">Fantasy Agents<a class="heading-anchor" href="#fantasy-agents" aria-label="Link to this section">#</a></h2>
+      <p>Looking at the example in the README fantasy library is primarily positioned as higher level library than I'd hoped:</p>
+      <pre><code class="language-go"><span class="hl-kw">import</span> <span class="hl-str">"charm.land/fantasy"</span>
+<span class="hl-kw">import</span> <span class="hl-str">"charm.land/fantasy/providers/openrouter"</span>
+
+<span class="hl-com">// Choose your fave provider.</span>
+provider, err := openrouter.<span class="hl-fn">New</span>(openrouter.<span class="hl-fn">WithAPIKey</span>(myHotKey))
+<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+	fmt.<span class="hl-fn">Fprintln</span>(os.Stderr, <span class="hl-str">"Whoops:"</span>, err)
+	os.<span class="hl-fn">Exit</span>(<span class="hl-num">1</span>)
+}
+
+ctx := context.<span class="hl-fn">Background</span>()
+
+<span class="hl-com">// Pick your fave model.</span>
+model, err := provider.<span class="hl-fn">LanguageModel</span>(ctx, <span class="hl-str">"moonshotai/kimi-k2"</span>)
+<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+	fmt.<span class="hl-fn">Fprintln</span>(os.Stderr, <span class="hl-str">"Dang:"</span>, err)
+	os.<span class="hl-fn">Exit</span>(<span class="hl-num">1</span>)
+}
+
+<span class="hl-com">// Make your own tools.</span>
+cuteDogTool := fantasy.<span class="hl-fn">NewAgentTool</span>(
+  <span class="hl-str">"cute_dog_tool"</span>,
+  <span class="hl-str">"Provide up-to-date info on cute dogs."</span>,
+  fetchCuteDogInfoFunc,
+)
+
+<span class="hl-com">// Equip your agent.</span>
+agent := fantasy.<span class="hl-fn">NewAgent</span>(
+  model,
+  fantasy.<span class="hl-fn">WithSystemPrompt</span>(<span class="hl-str">"You are a moderately helpful, dog-centric assistant."</span>),
+  fantasy.<span class="hl-fn">WithTools</span>(cuteDogTool),
+)
+
+<span class="hl-com">// Put that agent to work!</span>
+<span class="hl-kw">const</span> prompt = <span class="hl-str">"Find all the cute dogs in Silver Lake, Los Angeles."</span>
+result, err := agent.<span class="hl-fn">Generate</span>(ctx, fantasy.AgentCall{Prompt: prompt})
+<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+    fmt.<span class="hl-fn">Fprintln</span>(os.Stderr, <span class="hl-str">"Oof:"</span>, err)
+    os.<span class="hl-fn">Exit</span>(<span class="hl-num">1</span>)
+}
+fmt.<span class="hl-fn">Println</span>(result.Response.Content.<span class="hl-fn">Text</span>())</code></pre>
+      <p>Using this <code>Agent</code> type would not work for me because I want to have more control over the tools, I want to handle executing them. However, large amount of the fantasy package is made public so I thought it's still worth trying to use it, just at a lower level.</p>
+      <h2 id="rewrite-in-fantasy">Rewrite in Fantasy<a class="heading-anchor" href="#rewrite-in-fantasy" aria-label="Link to this section">#</a></h2>
+      <p>So I had Claude attempt a rewrite the Anthropic speficic model interactions with fantasy. It came out pretty good:</p>
+      <pre><code class="language-go"><span class="hl-kw">package</span> main
+
+<span class="hl-kw">import</span> (
+	<span class="hl-str">"context"</span>
+	<span class="hl-str">"fmt"</span>
+
+	<span class="hl-str">"charm.land/fantasy"</span>
+	<span class="hl-str">"charm.land/fantasy/providers/anthropic"</span>
+	<span class="hl-str">"charm.land/fantasy/providers/google"</span>
+	<span class="hl-str">"charm.land/fantasy/providers/openai"</span>
+)
+
+<span class="hl-kw">const</span> defaultModel <span class="hl-kw">string</span> = <span class="hl-str">"gemma4:31b-cloud"</span>
+
+<span class="hl-kw">type</span> ModelConfig <span class="hl-kw">struct</span> {
+	Provider <span class="hl-kw">string</span> <span class="hl-com">// "anthropic" (default), "openai", "google"</span>
+	Model    <span class="hl-kw">string</span>
+	BaseURL  <span class="hl-kw">string</span> <span class="hl-com">// optional endpoint override</span>
+	APIKey   <span class="hl-kw">string</span>
+	<span class="hl-com">// Headers adds extra HTTP headers to every request. Needed for endpoints</span>
+	<span class="hl-com">// that don't accept the provider's native auth scheme — e.g. Ollama Cloud</span>
+	<span class="hl-com">// speaks the Anthropic API but wants "Authorization: Bearer &lt;key&gt;" instead</span>
+	<span class="hl-com">// of the X-Api-Key header that WithAPIKey sets.</span>
+	Headers <span class="hl-kw">map</span>[<span class="hl-kw">string</span>]<span class="hl-kw">string</span>
+}
+
+<span class="hl-kw">func</span> <span class="hl-fn">NewModel</span>(ctx context.Context, cfg ModelConfig) (fantasy.LanguageModel, <span class="hl-kw">error</span>) {
+	<span class="hl-kw">if</span> cfg.Model == <span class="hl-str">""</span> {
+		cfg.Model = defaultModel
+	}
+
+	<span class="hl-kw">var</span> (
+		provider fantasy.Provider
+		err      <span class="hl-kw">error</span>
+	)
+	<span class="hl-kw">switch</span> cfg.Provider {
+	<span class="hl-kw">case</span> <span class="hl-str">""</span>, <span class="hl-str">"anthropic"</span>:
+		opts := []anthropic.Option{}
+		<span class="hl-kw">if</span> cfg.APIKey != <span class="hl-str">""</span> {
+			opts = <span class="hl-builtin">append</span>(opts, anthropic.<span class="hl-fn">WithAPIKey</span>(cfg.APIKey))
+		}
+		<span class="hl-kw">if</span> cfg.BaseURL != <span class="hl-str">""</span> {
+			opts = <span class="hl-builtin">append</span>(opts, anthropic.<span class="hl-fn">WithBaseURL</span>(cfg.BaseURL))
+		}
+		<span class="hl-kw">if</span> <span class="hl-builtin">len</span>(cfg.Headers) &gt; <span class="hl-num">0</span> {
+			opts = <span class="hl-builtin">append</span>(opts, anthropic.<span class="hl-fn">WithHeaders</span>(cfg.Headers))
+		}
+		provider, err = anthropic.<span class="hl-fn">New</span>(opts...)
+	<span class="hl-kw">case</span> <span class="hl-str">"openai"</span>:
+		opts := []openai.Option{}
+		<span class="hl-kw">if</span> cfg.APIKey != <span class="hl-str">""</span> {
+			opts = <span class="hl-builtin">append</span>(opts, openai.<span class="hl-fn">WithAPIKey</span>(cfg.APIKey))
+		}
+		<span class="hl-kw">if</span> cfg.BaseURL != <span class="hl-str">""</span> {
+			opts = <span class="hl-builtin">append</span>(opts, openai.<span class="hl-fn">WithBaseURL</span>(cfg.BaseURL))
+		}
+		<span class="hl-kw">if</span> <span class="hl-builtin">len</span>(cfg.Headers) &gt; <span class="hl-num">0</span> {
+			opts = <span class="hl-builtin">append</span>(opts, openai.<span class="hl-fn">WithHeaders</span>(cfg.Headers))
+		}
+		provider, err = openai.<span class="hl-fn">New</span>(opts...)
+	<span class="hl-kw">case</span> <span class="hl-str">"google"</span>:
+		opts := []google.Option{}
+		<span class="hl-kw">if</span> cfg.APIKey != <span class="hl-str">""</span> {
+			opts = <span class="hl-builtin">append</span>(opts, google.<span class="hl-fn">WithGeminiAPIKey</span>(cfg.APIKey))
+		}
+		<span class="hl-kw">if</span> cfg.BaseURL != <span class="hl-str">""</span> {
+			opts = <span class="hl-builtin">append</span>(opts, google.<span class="hl-fn">WithBaseURL</span>(cfg.BaseURL))
+		}
+		<span class="hl-kw">if</span> <span class="hl-builtin">len</span>(cfg.Headers) &gt; <span class="hl-num">0</span> {
+			opts = <span class="hl-builtin">append</span>(opts, google.<span class="hl-fn">WithHeaders</span>(cfg.Headers))
+		}
+		provider, err = google.<span class="hl-fn">New</span>(opts...)
+	<span class="hl-kw">default</span>:
+		<span class="hl-kw">return</span> <span class="hl-kw">nil</span>, fmt.<span class="hl-fn">Errorf</span>(<span class="hl-str">"unknown provider %q"</span>, cfg.Provider)
+	}
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> <span class="hl-kw">nil</span>, err
+	}
+	<span class="hl-kw">return</span> provider.<span class="hl-fn">LanguageModel</span>(ctx, cfg.Model)
+}
+
+<span class="hl-com">// AssistantMessage turns a model response into an assistant turn ready to append</span>
+<span class="hl-com">// to the session and feed back in.</span>
+<span class="hl-kw">func</span> <span class="hl-fn">AssistantMessage</span>(resp *fantasy.Response) fantasy.Message {
+	<span class="hl-kw">var</span> parts []fantasy.MessagePart
+	<span class="hl-kw">for</span> _, c := <span class="hl-kw">range</span> resp.Content {
+		<span class="hl-kw">switch</span> c.<span class="hl-fn">GetType</span>() {
+		<span class="hl-kw">case</span> fantasy.ContentTypeText:
+			<span class="hl-kw">if</span> t, ok := fantasy.AsContentType[fantasy.TextContent](c); ok {
+				parts = <span class="hl-builtin">append</span>(parts, fantasy.TextPart{
+					Text:            t.Text,
+					ProviderOptions: fantasy.<span class="hl-fn">ProviderOptions</span>(t.ProviderMetadata),
+				})
+			}
+		<span class="hl-kw">case</span> fantasy.ContentTypeReasoning:
+			<span class="hl-kw">if</span> r, ok := fantasy.AsContentType[fantasy.ReasoningContent](c); ok {
+				parts = <span class="hl-builtin">append</span>(parts, fantasy.ReasoningPart{
+					Text:            r.Text,
+					ProviderOptions: fantasy.<span class="hl-fn">ProviderOptions</span>(r.ProviderMetadata),
+				})
+			}
+		<span class="hl-kw">case</span> fantasy.ContentTypeToolCall:
+			<span class="hl-kw">if</span> tc, ok := fantasy.AsContentType[fantasy.ToolCallContent](c); ok {
+				parts = <span class="hl-builtin">append</span>(parts, fantasy.ToolCallPart{
+					ToolCallID:      tc.ToolCallID,
+					ToolName:        tc.ToolName,
+					Input:           tc.Input,
+					ProviderOptions: fantasy.<span class="hl-fn">ProviderOptions</span>(tc.ProviderMetadata),
+				})
+			}
+		}
+	}
+	<span class="hl-kw">return</span> fantasy.Message{Role: fantasy.MessageRoleAssistant, Content: parts}
+}
+
+<span class="hl-com">// ToolResultMessage wraps the outputs of the tools we ran into a single tool</span>
+<span class="hl-com">// turn. Each result is keyed by the tool_call_id it answers.</span>
+<span class="hl-kw">func</span> <span class="hl-fn">ToolResultMessage</span>(parts ...fantasy.ToolResultPart) fantasy.Message {
+	content := <span class="hl-builtin">make</span>([]fantasy.MessagePart, <span class="hl-builtin">len</span>(parts))
+	<span class="hl-kw">for</span> i, p := <span class="hl-kw">range</span> parts {
+		content[i] = p
+	}
+	<span class="hl-kw">return</span> fantasy.Message{Role: fantasy.MessageRoleTool, Content: content}
+}</code></pre>
+      <p>We now have bunch of bullshit config parsing going on in the <code>NewModel</code> function that returns a <code>fantasy.LanguageModel</code> interface which replaces the <code>AnthropicClient</code> we had previously. But now you can create a LanguageModel using three different provider implementations:</p>
+      <ol>
+        <li>"charm.land/fantasy/providers/anthropic"</li>
+        <li>"charm.land/fantasy/providers/google"</li>
+        <li>"charm.land/fantasy/providers/openai"</li>
+      </ol>
+      <p>Noice!</p>
+      <p>Only thing we need to really handle from now on relates to us storing the session (the list of messages). For that we have the <code>AssistantMessage</code> and <code>ToolResultMessage</code> functions that help to convert generated requests and our tool call executions respectively, back to <code>fantasy.Message</code> structs that we can store in the session.</p>
+      <p>In the tests we use these functions around handling the session. For an example let's look at simplified tool call execution code:</p>
+      <pre><code class="language-go"><span class="hl-com">// run each requested tool and collect the results as tool_result parts</span>
+session = <span class="hl-builtin">append</span>(session, <span class="hl-fn">AssistantMessage</span>(resp)) <span class="hl-com">// assistant turn carrying the tool calls</span>
+<span class="hl-kw">var</span> results []fantasy.ToolResultPart
+<span class="hl-kw">for</span> _, call := <span class="hl-kw">range</span> toolCalls {
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"model called tool %q with input %s"</span>, call.ToolName, call.Input)
+
+	out, _ := tool.<span class="hl-fn">Handler</span>(call.Input)
+
+	results = <span class="hl-builtin">append</span>(results, fantasy.ToolResultPart{
+		ToolCallID: call.ToolCallID,
+		Output:     fantasy.ToolResultOutputContentText{Text: out},
+	})
+}
+session = <span class="hl-builtin">append</span>(session, <span class="hl-fn">ToolResultMessage</span>(results...))</code></pre>
+      <p>There, we can use <code>AssistantMessage()</code> to transform any kind of response contents in to a <code>fantasy.Message</code> and <code>ToolResultMessage()</code> we use after we have executed our tools. That session is again just fed back into the next request to <code>Generate</code> by the <code>fantasy.LanguageModel</code>.</p>
+      <h2 id="tool-definitions">Tool Definitions<a class="heading-anchor" href="#tool-definitions" aria-label="Link to this section">#</a></h2>
+      <p>Our tools are nicely converted to <code>fantasy</code> too:</p>
+      <pre><code class="language-go"><span class="hl-kw">package</span> main
+
+<span class="hl-kw">import</span> (
+	<span class="hl-str">"time"</span>
+
+	<span class="hl-str">"charm.land/fantasy"</span>
+)
+
+<span class="hl-kw">type</span> Tool <span class="hl-kw">struct</span> {
+	fantasy.FunctionTool
+	Handler <span class="hl-kw">func</span>(input <span class="hl-kw">string</span>) (<span class="hl-kw">string</span>, <span class="hl-kw">error</span>)
+}
+
+<span class="hl-com">// FunctionTools extracts the wire definitions from tools for a fantasy.Call.</span>
+<span class="hl-kw">func</span> <span class="hl-fn">FunctionTools</span>(tools ...Tool) []fantasy.Tool {
+	out := <span class="hl-builtin">make</span>([]fantasy.Tool, <span class="hl-builtin">len</span>(tools))
+	<span class="hl-kw">for</span> i, t := <span class="hl-kw">range</span> tools {
+		out[i] = t.FunctionTool
+	}
+	<span class="hl-kw">return</span> out
+}
+
+<span class="hl-kw">func</span> <span class="hl-fn">CurrentTimeTool</span>() Tool {
+	<span class="hl-kw">return</span> Tool{
+		FunctionTool: fantasy.FunctionTool{
+			Name:        <span class="hl-str">"current_time"</span>,
+			Description: <span class="hl-str">"Returns the current time with one second precision, formatted as an RFC3339 timestamp."</span>,
+			InputSchema: <span class="hl-kw">map</span>[<span class="hl-kw">string</span>]<span class="hl-kw">any</span>{
+				<span class="hl-str">"type"</span>:       <span class="hl-str">"object"</span>,
+				<span class="hl-str">"properties"</span>: <span class="hl-kw">map</span>[<span class="hl-kw">string</span>]<span class="hl-kw">any</span>{},
+			},
+		},
+		Handler: <span class="hl-kw">func</span>(<span class="hl-kw">string</span>) (<span class="hl-kw">string</span>, <span class="hl-kw">error</span>) {
+			<span class="hl-kw">return</span> time.<span class="hl-fn">Now</span>().<span class="hl-fn">Truncate</span>(time.Second).<span class="hl-fn">Format</span>(time.RFC3339), <span class="hl-kw">nil</span>
+		},
+	}
+}</code></pre>
+      <p>Now our <code>Tool</code> struct embeds the <code>fantasy.FunctionTool</code>, before we make a call to the model to generate a response, we use <code>FunctionTools()</code> to "extract" a plain <code>[]fantasy.Tool</code> we can then use in the <code>Generate</code> method:</p>
+      <pre><code class="language-go">model := <span class="hl-fn">newTestModel</span>(t)
+
+tool := <span class="hl-fn">CurrentTimeTool</span>()
+tools := <span class="hl-fn">FunctionTools</span>(tool)
+
+session := fantasy.Prompt{
+	fantasy.<span class="hl-fn">NewUserMessage</span>(<span class="hl-str">"What is the current time? Use the current_time tool to find out."</span>),
+}
+
+<span class="hl-com">// turn 1: expect the model to ask for the tool</span>
+resp, err := model.<span class="hl-fn">Generate</span>(ctx, fantasy.Call{
+	Prompt: session,
+	Tools: tools,
+	MaxOutputTokens: <span class="hl-builtin">new</span>(maxTokens)
+})</code></pre>
+      <p>I wasn't fully happy with this refactoring by Claude at first, but there are several interfaces for tools in the fantasy package (<code>AgentTool</code>, <code>Tool</code>) and it seems we are now using the underlying <code>Tool</code> type here. I guess fair to say we kind of implement our own <code>AgentTool</code> type (just called a <code>Tool</code> in our package). A <code>fantasy.FunctionTool</code> is what we need to pass into the Generate method because there is a type assertion there:</p>
+      <pre><code class="language-go"># from fantasy/providers/anthropic/anthropic.<span class="hl-kw">go</span>
+<span class="hl-kw">func</span> (a languageModel) <span class="hl-fn">toTools</span>(tools []fantasy.Tool, ...) (rawTools []json.RawMessage, ...) {
+	<span class="hl-kw">for</span> _, tool := <span class="hl-kw">range</span> tools {
+		<span class="hl-kw">if</span> tool.<span class="hl-fn">GetType</span>() == fantasy.ToolTypeFunction {
+			<span class="hl-com">// here our tools passed should be FunctionTools!</span>
+			ft, ok := tool.(fantasy.FunctionTool)
+			<span class="hl-kw">if</span> !ok {
+				<span class="hl-kw">continue</span>
+			}</code></pre>
+      <p>Because we embedded the struct this is given:</p>
+      <pre><code class="language-go"><span class="hl-kw">type</span> Tool <span class="hl-kw">struct</span> {
+        fantasy.FunctionTool
+        Handler <span class="hl-kw">func</span>(input <span class="hl-kw">string</span>) (<span class="hl-kw">string</span>, <span class="hl-kw">error</span>)
+}</code></pre>
+      <p>I guess this implementation is <em>fine</em>. It does not feel restrictive in any way, very glad they made these types public so we can do this without a fork. There are also provider defined tools, so that's why <code>FunctionTool</code> is the type for our implementations.</p>
+      <h2 id="ackshually">Ackshually<a class="heading-anchor" href="#ackshually" aria-label="Link to this section">#</a></h2>
+      <p>Technically, our requirement was that we want to execute the tool which was a very loose requirement. That is still possible with an <code>fantasy.AgentTool</code>:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">bashTool</span>(machine Machine) fantasy.AgentTool {
+	<span class="hl-kw">return</span> fantasy.<span class="hl-fn">NewAgentTool</span>(
+		<span class="hl-str">"bash"</span>,
+		<span class="hl-str">"Run a shell command inside the machine's workspace and return its combined output."</span>,
+		<span class="hl-kw">func</span>(ctx context.Context, in bashInput, _ fantasy.ToolCall) (fantasy.ToolResponse, <span class="hl-kw">error</span>) {
+			out, exitCode, err := machine.<span class="hl-fn">Exec</span>(ctx, in.Command)
+			<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+				<span class="hl-kw">return</span> fantasy.<span class="hl-fn">NewTextErrorResponse</span>(fmt.<span class="hl-fn">Sprintf</span>(<span class="hl-str">"failed to run command: %v"</span>, err)), <span class="hl-kw">nil</span>
+			}
+			<span class="hl-kw">return</span> fantasy.<span class="hl-fn">NewTextResponse</span>(fmt.<span class="hl-fn">Sprintf</span>(<span class="hl-str">"exit code: %d\n%s"</span>, exitCode, out)), <span class="hl-kw">nil</span>
+		},
+	)
+}</code></pre>
+      <p>You can think of the <code>machine</code> as a sandbox, something like a container or a microVM. This is why I want to control the tool calls, because I want the option to run individual tool calls in sandboxes instead of the agent process itself. We could still control much of the execution like this, but this feels like adopting a framework.</p>
+      <p>This isn't same as having full control when this runs, and perhaps also handling persistency around the agent execution. That's why I think it's best to go with the implementation that ignores all the Agent types. But I might change my mind... Let's see. I'm not saying that would bad either, just perhaps I want to do something differently and that is reason enough to be careful what to adopt.</p>
+      <h2 id="conclusion">Conclusion<a class="heading-anchor" href="#conclusion" aria-label="Link to this section">#</a></h2>
+      <p>You can read the full code in <a href="https://github.com/maikdotfi/agent-the-hard-way/tree/main/01-multimodel">the repo</a>. After the refactoring all the tests seem to output the same raw requests/responses with fantasy as before. Only difference is that streaming is separate method (<code>Stream</code> insted of <code>Generate</code>), so the entire <code>stream</code> field is missing when using <code>Generate</code>. Unless doing something user-facing, I don't really see point in streaming. It makes it more cumbersome to spy on the traffic when you have to "unstream" the responses.</p>
+      <p>Last but not least, fantasy seems sweet so far for this lower level use-case of just talking to the LLM APIs instead of opting into the <code>Agent</code> type and tools.</p>
+
+    </article>
+  </div>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const toggle = document.querySelector('.theme-toggle');
+      if (!toggle) return;
+
+      const storageKey = 'maikfi-theme';
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = (theme) => {
+        if (theme === 'light' || theme === 'dark') {
+          root.setAttribute('data-theme', theme);
+        } else {
+          root.removeAttribute('data-theme');
+        }
+
+        const effective = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const label = effective === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        toggle.setAttribute('aria-pressed', effective === 'dark');
+        toggle.setAttribute('aria-label', label);
+        toggle.setAttribute('title', label);
+      };
+
+      const stored = localStorage.getItem(storageKey);
+      const initial = stored === 'light' || stored === 'dark' ? stored : null;
+      if (stored && !initial) {
+        localStorage.removeItem(storageKey);
+      }
+      applyTheme(initial);
+
+      toggle.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(storageKey, next);
+        applyTheme(next);
+      });
+
+      mediaQuery.addEventListener('change', (event) => {
+        if (!localStorage.getItem(storageKey)) {
+          applyTheme(event.matches ? 'dark' : 'light');
+        }
+      });
+    }());
+  </script>
+</body>
+</html>
