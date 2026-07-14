@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agent the Hard Way: Why and what? | maik.fi</title>
+  <title>Agent the Hard Way: Everything is a Tool | maik.fi</title>
   <link rel="icon" href="../favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -373,45 +373,141 @@
     </nav>
     <article>
       <header>
-        <h1>Agent the Hard Way: Why and what?</h1>
+        <h1>Agent the Hard Way: Everything is a Tool</h1>
         <p class="meta">
-          <time datetime="2026-07-05">July 5, 2026</time> — by Mike
+          <time datetime="2026-07-14">July 14, 2026</time> — by Mike
         </p>
         <div class="tags"><span class="tag">hard way</span><span class="tag">agentic coding</span><span class="tag">llms</span>
         </div>
       </header>
-      <p>I am starting a new project, and at the same time writing about it each step of the way. This means there will be a series of blog posts under this "Agent the Hard Way" umbrella.</p>
-      <p>I was thinking of writing a book, not a <em>real</em> book. Just instead of blog posts create an open static site with <a href="https://github.com/rust-lang/mdBook/">mdbook</a> or something similar. But ultimately that's not what I need right now, I just want to focus on hacking the thing together and writing as a way of learning instead of focusing on being actually pedagogical in the content. I'll just write this series like I'm writing for my self, somebody who wants to learn about the topic and know it deeply. Unlike typical blog posts though, I do plan on updating the posts if I discover something that I would like to correct/improve upon. Like adding examples or even major refactoring on the content.</p>
-      <p>Why am I building it? Well I find that a lot of toil can be handled by agents in my daily work, so I see value in the technology. And beyond software development and delivery related tasks there's much much more potential I see. Like diagnosing issues and troublshooting much more efficiently. More philosophically, it's cool computer has new tricks. We can solve problems we couldn't before. I find joy in the work and I'm optimistic local AI models will become so good we can do this without all the fucking data centers.</p>
-      <h2 id="agent-the-hard-way">Agent the Hard Way<a class="heading-anchor" href="#agent-the-hard-way" aria-label="Link to this section">#</a></h2>
-      <p>First things first, the name is of course a reference to the legendary <a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">Kubernetes the hard way</a> by Kelsey Hightower. But the project isn't going to be quite the same as that one. I just really think the name is fun, props to Kelsey!</p>
-      <p>So what it is? Time will tell in more detail, but I set out to deploy a <strong>coding agent into production</strong> as the end goal. I will self-host the agent on a spare Intel NUC I have, or I will deploy it on a cheap VPS, depends a bit how I want to interact with it. I ain't gonna open my home network to the interwebs for this.</p>
-      <h2 id="coding-agent">Coding Agent<a class="heading-anchor" href="#coding-agent" aria-label="Link to this section">#</a></h2>
-      <p>Unfortunately, there isn't really a good <em>coding agent</em> you can just deploy. Damn, so I'll just write one then, easy enough. Except it's not that easy when I think about it. To build an agent you build a while loop that exists when the LLM does not want to do more tool calls, but wait, where does that loop run? How does it access the repo? Where is the session stored and how is it triggered? How does it build the project if it's not on my laptop? (goal of the project is <strong>production</strong>, my laptop does not belong in prod)</p>
-      <h3 id="harness">Harness<a class="heading-anchor" href="#harness" aria-label="Link to this section">#</a></h3>
-      <p>So looking at things that exist we have things that you run locally like:</p>
+      <p>Give LLMs tools and they make stuff happen.</p>
+      <h2 id="tangent">Tangent<a class="heading-anchor" href="#tangent" aria-label="Link to this section">#</a></h2>
+      <p>Before I get into why everything is a tool (me included):</p>
+      <p>I wanted to split the Agent the Hard Way "project" into two repos:</p>
+      <ol>
+        <li><a href="https://github.com/maikdotfi/agent-the-hard-way">agent-the-hard-way</a></li>
+        <li><a href="https://github.com/maikdotfi/metaharness">metaharness</a></li>
+      </ol>
+      <p>The <code>metaharness</code> repo is a library and <code>agent-the-hard-way</code> contains concrete agent implementations that are composed of the meta harness pieces. This makes also sense because I don't want to limit the things I put into <code>agent-the-hard-way</code> repo to just my own stuff, I might very well try some pre-baked stuff as well there. I just don't know what yet. The repo itself has no writing right now, maybe one day it will or maybe I should just link to my blog. Remains to be seen.</p>
+      <h2 id="everything-is-a-tool">Everything is a Tool<a class="heading-anchor" href="#everything-is-a-tool" aria-label="Link to this section">#</a></h2>
+      <p>Alright, so everything is a tool. What do I mean? Well in order for an LLM agent to do things it needs only tools:</p>
+      <ol>
+        <li>read and write files -&gt; tools</li>
+        <li>read a skill -&gt; tool</li>
+        <li>interact with MCP server? Just another tool</li>
+      </ol>
+      <p>To simplify it even further, a conversation with an LLM just contains text and tool calls (and responses to tool calls). That's why everything we add on top of the API is either text or a tool that the LLM can choose to call. Basically the conversation with an LLM looks like this abstractly:</p>
+      <pre><code class="language-text">&lt;system prompt&gt;
+&lt;user message&gt;
+&lt;tool definitions&gt;
+&lt;thinking&gt;
+&lt;tool call&gt;
+&lt;tool result&gt;
+...
+&lt;assistant message&gt;</code></pre>
+      <p>Everything interesting happens via tool calls. The idea of tools is kinda simple, but some seem to make a big deal out of MCP etc. It's just tool calls. Let's look at some tools next next.</p>
+      <h2 id="what-the-tools">What the Tools<a class="heading-anchor" href="#what-the-tools" aria-label="Link to this section">#</a></h2>
+      <p>Pi has 4 built-in tools:</p>
       <ul>
-        <li>codex</li>
-        <li>claude code</li>
-        <li>pi.dev</li>
+        <li>read</li>
+        <li>write</li>
+        <li>edit</li>
+        <li>bash</li>
       </ul>
-      <p>Yeah, out of those you can perhaps choose Pi and extend your way into happiness. These are called <strong>Agent Harnessess</strong> these days.</p>
-      <p>Then we also have of course things that don't run on your laptop, like:</p>
+      <p>Claude Code has lots more tools built-in and then more for which the tool definition is not loaded into context, but you access via <code>ToolSearch</code> tool of course:</p>
       <ul>
-        <li><a href="https://agents.cloudflare.com/">CloudFlare Agents</a></li>
-        <li><a href="https://cloud.google.com/gemini-enterprise/agents">Google Gemini Enterprise Agent Platform</a> (what a name...?)</li>
-        <li><a href="https://claude.com/blog/claude-managed-agents">Claude Managed Agents</a></li>
+        <li>Read</li>
+        <li>Write</li>
+        <li>Edit</li>
+        <li>Bash</li>
+        <li>Agent</li>
+        <li>AskUserQuestion</li>
+        <li>ScheduleWakeup</li>
+        <li>ShareOnboardingGuide</li>
+        <li>Skill</li>
+        <li>ToolSearch</li>
+        <li>Workflow</li>
       </ul>
-      <p>In the OSS world there does not seem to be a project that is winning (AFAIK), but surely there are hundreds if not thousands of projects already being built trying to become the Kubernetes of Agent Platforms. So "Agent the Hard Way" having some reference to Kubernetes feels actually pretty fair, just like Kubernetes once was competing with Mesos and Docker Swarm before becoming dominant in the market.</p>
-      <p>In fairness, I will mention that there is the <a href="https://github.com/langchain-ai/open-swe">Open SWE</a> project from LangChain that is perhaps closest to something I could use right away. But I don't think there is mass adoption of it, so I don't see point focusing on that instead of just writing something myself and learning even more. :)</p>
-      <h2 id="what-goes-into-a-harness">What goes into a Harness?<a class="heading-anchor" href="#what-goes-into-a-harness" aria-label="Link to this section">#</a></h2>
-      <p>I made a small picture of the things that <em>could</em> go into a coding agent harness for example:</p>
-      <p><img src="./agent-harness-crayon.png" alt="agent-harness-crayon.png"></p>
-      <p>These are some of the things that will get dedicated posts, and some will not. I'll start with the very basics though.</p>
-      <h2 id="whats-the-angle">What's the angle?<a class="heading-anchor" href="#whats-the-angle" aria-label="Link to this section">#</a></h2>
-      <p>Ok so what will I do differently? Well for starters, I want to create a meta harness. Not just a harness like Claude Code (a coding agent CLI for local use), but a meta harness that can be used (in code) to create agents of all kinds of shapes and for all kinds of uses.</p>
-      <p>I will be using Go as the programming language. I think the code is readable enough if you don't know Go, and I find it should fit very well into this problem space. Importantly, Go is very stable so hopefully the code will require minimal maintenance to still compile and work much later.</p>
-      <p>That's what I will build and deploy. Now, building my own does not in my mind mean I will not use dependencies at all. I definitely will, but only <em>libraries</em> never <em>frameworks</em>. Using a framework is something you do at work, it's productive, but rarely great to learn how things <strong>work</strong> and even that productivity gain can be destroyed by migration work between major versions if you are unlucky.</p>
+      <p>Here are the deferred tools that are included only by name, if you are curious:</p>
+      <ul>
+        <li>CronCreate</li>
+        <li>CronDelete</li>
+        <li>CronList</li>
+        <li>DesignSync</li>
+        <li>EnterPlanMode</li>
+        <li>EnterWorktree</li>
+        <li>ExitPlanMode</li>
+        <li>ExitWorktree</li>
+        <li>Monitor</li>
+        <li>NotebookEdit</li>
+        <li>PushNotification</li>
+        <li>RemoteTrigger</li>
+        <li>TaskCreate</li>
+        <li>TaskGet</li>
+        <li>TaskList</li>
+        <li>TaskOutput</li>
+        <li>TaskStop</li>
+        <li>TaskUpdate</li>
+        <li>WebFetch</li>
+        <li>WebSearch</li>
+      </ul>
+      <p>Man, lots of tools. And this list will surely be longer soon.</p>
+      <p>Actually I forgot to mention some more tools:</p>
+      <ul>
+        <li>mcp<em></em>claude<em>ai</em>Asana<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Asana<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Atlassian<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Atlassian<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Box<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Box<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Canva<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Canva<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>EULER<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>EULER<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Figma<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Figma<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Gamma<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Gamma<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>HubSpot<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>HubSpot<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Intercom<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Intercom<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Linear<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Linear<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>Notion<em></em>authenticate</li>
+        <li>mcp<em></em>claude<em>ai</em>Notion<em></em>complete<em>authentication</em></li>
+        <li>mcp<em></em>claude<em>ai</em>monday<em>com</em><em>authenticate</em></li>
+        <li>mcp<em></em>claude<em>ai</em>monday<em>com</em><em>complete</em>authentication</li>
+      </ul>
+      <p>Those are some sort of MCP servers you can opt-into, so the auth tools are there by default(?). If you have some MCP servers of your own there are, you guessed it, more tools:</p>
+      <ul>
+        <li>mcp<em></em>lightpanda<em></em>click</li>
+        <li>mcp<em></em>lightpanda<em></em>detectForms</li>
+        <li>mcp<em></em>lightpanda<em></em>eval</li>
+        <li>mcp<em></em>lightpanda<em></em>evaluate</li>
+        <li>mcp<em></em>lightpanda<em></em>fill</li>
+        <li>mcp<em></em>lightpanda<em></em>findElement</li>
+        <li>mcp<em></em>lightpanda<em></em>goto</li>
+        <li>mcp<em></em>lightpanda<em></em>hover</li>
+        <li>mcp<em></em>lightpanda<em></em>interactiveElements</li>
+        <li>mcp<em></em>lightpanda<em></em>links</li>
+        <li>mcp<em></em>lightpanda<em></em>markdown</li>
+        <li>mcp<em></em>lightpanda<em></em>navigate</li>
+        <li>mcp<em></em>lightpanda<em></em>nodeDetails</li>
+        <li>mcp<em></em>lightpanda<em></em>press</li>
+        <li>mcp<em></em>lightpanda<em></em>scroll</li>
+        <li>mcp<em></em>lightpanda<em></em>selectOption</li>
+        <li>mcp<em></em>lightpanda<em></em>semantic<em>tree</em></li>
+        <li>mcp<em></em>lightpanda<em></em>setChecked</li>
+        <li>mcp<em></em>lightpanda<em></em>structuredData</li>
+        <li>mcp<em></em>lightpanda<em></em>waitForSelector</li>
+      </ul>
+      <p>That's an example when I had <a href="https://lightpanda.io/">lightpanda</a> loaded as MCP server.</p>
+      <h2 id="skills-as-a-tool">Skills as a Tool<a class="heading-anchor" href="#skills-as-a-tool" aria-label="Link to this section">#</a></h2>
+      <p>Skills don't actually have to be implemented as a tool, but it makes sense to me you'd have a skill to read the full <code>SKILL.md</code>. That means you don't necessarily have to have the skill files even on a filesystem, but not having them on a filesystem can feel weird if the agent has access to the shell anyways. It depends.</p>
+      <p>Claude Code has a tool for skills which you might have noticed above, pi does not, skills are just listed in the system prompt and the agent can choose on it's own to read the <code>SKILL.md</code> if it wants. Both approaches are fine, but to me it feels better actually to implement the skills via a tool. That way it will be easy to see if a skill was called, that sounds like a good thing? Honestly</p>
+      <h2 id="conclusion">Conclusion<a class="heading-anchor" href="#conclusion" aria-label="Link to this section">#</a></h2>
+      <p>When I saw how many tools Claude Code has and knowing Pi has so few I felt like writing this because it's nuts. I'll soon publish another post going into implementation of tools.</p>
 
     </article>
   </div>
