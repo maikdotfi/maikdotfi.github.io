@@ -50,99 +50,99 @@ Everything interesting happens via tool calls. The idea of tools is kinda simple
 
 Pi has 4 built-in tools:
 
-- read
-- write
-- edit
-- bash
+- `read`
+- `write`
+- `edit`
+- `bash`
 
 Claude Code has lots more tools built-in and then more for which the tool definition is not loaded into context, but you access via `ToolSearch` tool of course:
 
-- Read
-- Write
-- Edit
-- Bash
-- Agent
-- AskUserQuestion
-- ScheduleWakeup
-- ShareOnboardingGuide
-- Skill
-- ToolSearch
-- Workflow
+- `Read`
+- `Write`
+- `Edit`
+- `Bash`
+- `Agent`
+- `AskUserQuestion`
+- `ScheduleWakeup`
+- `ShareOnboardingGuide`
+- `Skill`
+- `ToolSearch`
+- `Workflow`
 
 Here are the deferred tools that are included only by name, if you are curious:
 
-- CronCreate
-- CronDelete
-- CronList
-- DesignSync
-- EnterPlanMode
-- EnterWorktree
-- ExitPlanMode
-- ExitWorktree
-- Monitor
-- NotebookEdit
-- PushNotification
-- RemoteTrigger
-- TaskCreate
-- TaskGet
-- TaskList
-- TaskOutput
-- TaskStop
-- TaskUpdate
-- WebFetch
-- WebSearch
+- `CronCreate`
+- `CronDelete`
+- `CronList`
+- `DesignSync`
+- `EnterPlanMode`
+- `EnterWorktree`
+- `ExitPlanMode`
+- `ExitWorktree`
+- `Monitor`
+- `NotebookEdit`
+- `PushNotification`
+- `RemoteTrigger`
+- `TaskCreate`
+- `TaskGet`
+- `TaskList`
+- `TaskOutput
+- `TaskStop`
+- `TaskUpdate
+- `WebFetch`
+- `WebSearch`
 
 Man, lots of tools. And this list will surely be longer soon.
 
 Actually I forgot to mention some more tools:
 
-- mcp__claude_ai_Asana__authenticate
-- mcp__claude_ai_Asana__complete_authentication
-- mcp__claude_ai_Atlassian__authenticate
-- mcp__claude_ai_Atlassian__complete_authentication
-- mcp__claude_ai_Box__authenticate
-- mcp__claude_ai_Box__complete_authentication
-- mcp__claude_ai_Canva__authenticate
-- mcp__claude_ai_Canva__complete_authentication
-- mcp__claude_ai_EULER__authenticate
-- mcp__claude_ai_EULER__complete_authentication
-- mcp__claude_ai_Figma__authenticate
-- mcp__claude_ai_Figma__complete_authentication
-- mcp__claude_ai_Gamma__authenticate
-- mcp__claude_ai_Gamma__complete_authentication
-- mcp__claude_ai_HubSpot__authenticate
-- mcp__claude_ai_HubSpot__complete_authentication
-- mcp__claude_ai_Intercom__authenticate
-- mcp__claude_ai_Intercom__complete_authentication
-- mcp__claude_ai_Linear__authenticate
-- mcp__claude_ai_Linear__complete_authentication
-- mcp__claude_ai_Notion__authenticate
-- mcp__claude_ai_Notion__complete_authentication
-- mcp__claude_ai_monday_com__authenticate
-- mcp__claude_ai_monday_com__complete_authentication
+- `mcp__claude_ai_Asana__authenticate`
+- `mcp__claude_ai_Asana__complete_authentication`
+- `mcp__claude_ai_Atlassian__authenticate`
+- `mcp__claude_ai_Atlassian__complete_authentication`
+- `mcp__claude_ai_Box__authenticate`
+- `mcp__claude_ai_Box__complete_authentication`
+- `mcp__claude_ai_Canva__authenticate`
+- `mcp__claude_ai_Canva__complete_authentication`
+- `mcp__claude_ai_EULER__authenticate`
+- `mcp__claude_ai_EULER__complete_authentication`
+- `mcp__claude_ai_Figma__authenticate`
+- `mcp__claude_ai_Figma__complete_authentication`
+- `mcp__claude_ai_Gamma__authenticate`
+- `mcp__claude_ai_Gamma__complete_authentication`
+- `mcp__claude_ai_HubSpot__authenticate`
+- `mcp__claude_ai_HubSpot__complete_authentication`
+- `mcp__claude_ai_Intercom__authenticate`
+- `mcp__claude_ai_Intercom__complete_authentication`
+- `mcp__claude_ai_Linear__authenticate`
+- `mcp__claude_ai_Linear__complete_authentication`
+- `mcp__claude_ai_Notion__authenticate`
+- `mcp__claude_ai_Notion__complete_authentication`
+- `mcp__claude_ai_monday_com__authenticate`
+- `mcp__claude_ai_monday_com__complete_authentication`
 
 Those are some sort of MCP servers you can opt-into, so the auth tools are there by default(?). If you have some MCP servers of your own there are, you guessed it, more tools:
 
-- mcp__lightpanda__click
-- mcp__lightpanda__detectForms
-- mcp__lightpanda__eval
-- mcp__lightpanda__evaluate
-- mcp__lightpanda__fill
-- mcp__lightpanda__findElement
-- mcp__lightpanda__goto
-- mcp__lightpanda__hover
-- mcp__lightpanda__interactiveElements
-- mcp__lightpanda__links
-- mcp__lightpanda__markdown
-- mcp__lightpanda__navigate
-- mcp__lightpanda__nodeDetails
-- mcp__lightpanda__press
-- mcp__lightpanda__scroll
-- mcp__lightpanda__selectOption
-- mcp__lightpanda__semantic_tree
-- mcp__lightpanda__setChecked
-- mcp__lightpanda__structuredData
-- mcp__lightpanda__waitForSelector
+- `mcp__lightpanda__click`
+- `mcp__lightpanda__detectForms`
+- `mcp__lightpanda__eval`
+- `mcp__lightpanda__evaluate`
+- `mcp__lightpanda__fill`
+- `mcp__lightpanda__findElement`
+- `mcp__lightpanda__goto`
+- `mcp__lightpanda__hover`
+- `mcp__lightpanda__interactiveElements`
+- `mcp__lightpanda__links`
+- `mcp__lightpanda__markdown`
+- `mcp__lightpanda__navigate`
+- `mcp__lightpanda__nodeDetails`
+- `mcp__lightpanda__press`
+- `mcp__lightpanda__scroll`
+- `mcp__lightpanda__selectOption`
+- `mcp__lightpanda__semantic_tree`
+- `mcp__lightpanda__setChecked`
+- `mcp__lightpanda__structuredData`
+- `mcp__lightpanda__waitForSelector`
 
 That's an example when I had [lightpanda](https://lightpanda.io/) loaded as MCP server.
 

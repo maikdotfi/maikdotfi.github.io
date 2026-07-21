@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent the Hard Way: Skills and Tools | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f1ea;
+      --bg-tint: #ece7dc;
+      --fg: #1c1a16;
+      --muted-fg: #756f63;
+      --accent: #b14a26;
+      --rule: #d8d2c4;
+      --code-bg: #ede7d8;
+      --code-border: #dad1bd;
+      --tok-com: #8a8372;
+      --tok-kw: #9c3d1f;
+      --tok-str: #4f6a2e;
+      --tok-num: #8a5a12;
+      --tok-fn: #345b6b;
+      --tok-builtin: #7a4a86;
+      --display: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+        --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+        --code-bg: #24241c; --code-border: #33332a;
+        --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+        --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f1ea; --bg-tint: #ece7dc; --fg: #1c1a16;
+      --muted-fg: #756f63; --accent: #b14a26; --rule: #d8d2c4;
+      --code-bg: #ede7d8; --code-border: #dad1bd;
+      --tok-com: #8a8372; --tok-kw: #9c3d1f; --tok-str: #4f6a2e;
+      --tok-num: #8a5a12; --tok-fn: #345b6b; --tok-builtin: #7a4a86;
+      color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+      --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+      --code-bg: #24241c; --code-border: #33332a;
+      --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+      --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      color: var(--fg);
+      font-family: var(--body);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      max-width: 50rem;
+      margin: 0 auto;
+      padding: clamp(2rem, 5vw, 3.5rem) 1.6rem 6rem;
+    }
+
+     
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+    }
+
+    .nav-links { display: flex; gap: 1.5rem; align-items: baseline; }
+
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      transition: color 180ms ease;
+    }
+
+    nav a:hover,
+    nav a:focus-visible { color: var(--accent); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--muted-fg);
+      cursor: pointer;
+      transition: color 180ms ease, transform 300ms ease;
+    }
+
+    .theme-toggle svg { width: 1.6rem; height: 1.6rem; }
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible { color: var(--accent); transform: rotate(-12deg); }
+    .theme-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+     
+    article { margin-top: clamp(3rem, 7vw, 5rem); }
+
+    article > header {
+      margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 750;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.2rem;
+      max-width: 18ch;
+    }
+
+    .meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+      margin: 0;
+    }
+
+    .tags {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .tag::before { content: "#"; opacity: 0.45; margin-right: 0.15em; }
+
+     
+    article > p,
+    article > ul,
+    article > blockquote,
+    article > pre,
+    article > h2,
+    article > h3,
+    article > h4 {
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: 120ms;
+    }
+
+    article p { margin: 1.4rem 0; }
+
+    article > p:first-of-type { margin-top: 0; }
+
+    h2, h3, h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 2.6rem 0 0.9rem;
+    }
+
+    h2 { font-size: 1.65rem; }
+    h3 { font-size: 1.3rem; }
+    h4 { font-size: 1.1rem; }
+
+     
+    .heading-anchor {
+      margin-left: 0.35em;
+      color: var(--muted-fg);
+      font-weight: 400;
+      text-decoration: none;
+      background: none;
+      opacity: 0;
+      transition: opacity 160ms ease, color 160ms ease;
+    }
+    h2:hover .heading-anchor,
+    h3:hover .heading-anchor,
+    h4:hover .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 0.65; }
+    .heading-anchor:hover { opacity: 1; color: var(--accent); }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: 100% 1px;
+      background-position: 0 1.15em;
+      background-repeat: no-repeat;
+      transition: background-position 160ms ease, opacity 160ms ease;
+    }
+
+    a:hover,
+    a:focus-visible { opacity: 0.7; }
+
+    article ul {
+      margin: 1.4rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    article ol {
+      margin: 1.4rem 0;
+      padding-left: 1.6rem;
+    }
+
+    article li {
+      margin: 0.5rem 0;
+    }
+
+    article ul li {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    article ol li::marker {
+      color: var(--accent);
+    }
+
+    article ul li::before {
+      content: "";
+      position: absolute;
+      left: 0.1rem;
+      top: 0.72em;
+      width: 0.4rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    article pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-left: 2px solid var(--accent);
+      border-radius: 0;
+      padding: 1.2rem 1.3rem;
+      overflow-x: auto;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      margin: 1.8rem 0;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.86em;
+    }
+
+     
+    article pre code { font-size: 1em; }
+
+     
+    article pre .hl-com     { color: var(--tok-com); font-style: italic; }
+    article pre .hl-kw      { color: var(--tok-kw); }
+    article pre .hl-str     { color: var(--tok-str); }
+    article pre .hl-num     { color: var(--tok-num); }
+    article pre .hl-fn      { color: var(--tok-fn); }
+    article pre .hl-builtin { color: var(--tok-builtin); }
+
+    article p code,
+    article li code {
+      background: var(--code-bg);
+      padding: 0.12rem 0.4rem;
+      border-radius: 0;
+    }
+
+    article img {
+      max-width: 50%;
+      height: auto;
+      border-radius: 0;
+      margin: 2rem auto;
+      display: block;
+    }
+
+    article img.img-small { max-width: 30%; }
+    article img.img-wide { max-width: 80%; }
+    article img.img-full { max-width: 100%; }
+
+    article blockquote {
+      margin: 2rem 0;
+      padding: 0 0 0 2.2rem;
+      position: relative;
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.35rem;
+      line-height: 1.45;
+      color: var(--fg);
+    }
+
+    article blockquote::before {
+      content: "\201C";
+      position: absolute;
+      left: -0.1rem;
+      top: 0.35rem;
+      font-family: var(--display);
+      font-size: 3.4rem;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    article blockquote p { margin: 0; }
+
+    .footnotes {
+      border-top: 1px solid var(--rule);
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      font-size: 0.92rem;
+      color: var(--muted-fg);
+    }
+
+    .footnotes ol { margin: 0; padding-left: 1.3rem; }
+    .footnotes li { line-height: 1.6; margin: 0.4rem 0; }
+
+    sup a { background: none; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="nav-links">
+        <a href="index.html">← All writing</a>
+        <a href="../index.html">maik.fi</a>
+      </div>
+      <button type="button" class="theme-toggle" aria-pressed="false" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 256 256" aria-hidden="true">
+          <rect width="256" height="256" fill="none"/>
+          <polygon points="64 40 192 40 240 152 16 152 64 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="128" y1="152" x2="128" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="96" y1="216" x2="160" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="200" y1="152" x2="200" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+        </svg>
+      </button>
+    </nav>
+    <article>
+      <header>
+        <h1>Agent the Hard Way: Skills and Tools</h1>
+        <p class="meta">
+          <time datetime="2026-07-21">July 21, 2026</time> — by Mike
+        </p>
+        <div class="tags"><span class="tag">hard way</span><span class="tag">agentic coding</span><span class="tag">llms</span>
+        </div>
+      </header>
+      <p>Implementing Agent Skills as a tool.</p>
+      <h2 id="intro">Intro<a class="heading-anchor" href="#intro" aria-label="Link to this section">#</a></h2>
+      <p>I decided to implement <a href="https://agentskills.io/">Agent Skills</a>, or shortly skills from now on, as a tool. Because <a href="https://maik.fi/blog/09-agent-the-hard-way-3.html">everything is a tool</a>. This blog post does not spend too much time talking about skills themselves, they are pretty simple things. Most skills out in the nature don't actually have anything else than a <code>SKILL.md</code> and that is fine, skills are still useful! Frontier models are extremely good at following instructions given in skills, they are simple yet effective.</p>
+      <h2 id="supporting-skills">Supporting Skills<a class="heading-anchor" href="#supporting-skills" aria-label="Link to this section">#</a></h2>
+      <p>Antropic originally <em>developed</em> Agent Skills and then made it into an open standard (of sorts). The official site has instructions how to <a href="https://agentskills.io/client-implementation/adding-skills-support">add support for skills into an agent</a>. It describes 5 steps (at the time of reading):</p>
+      <ol>
+        <li>Discover skills</li>
+        <li>Parse SKILL.md files</li>
+        <li>Disclose available skills to the model</li>
+        <li>Activate skills</li>
+        <li>Manage skill context over time</li>
+      </ol>
+      <p>Out of these five we will not actually have to implement the parsing nor discovery, at least for now. It's not a thing for a specialised agent as we will see. Also I don't think there is a need to implement the last step until compaction is introduced. Compaction is definitely a topic of it's own. So we will implement these:</p>
+      <ol>
+        <li>Disclose available skills to the model</li>
+        <li>Activate skills</li>
+      </ol>
+      <p>We will use the dedicated <code>skill</code> tool to do these both. In the description of the tool we will provide the list of available skills because we anyways need those skills to be passed when creating this tool. This will make the implementation more straight forward because we don't need the skills to go into the system prompt, and worry if we use this tool or not. If we have skills, we should use this tool.</p>
+      <h2 id="skill-list">Skill list<a class="heading-anchor" href="#skill-list" aria-label="Link to this section">#</a></h2>
+      <p>In our description we include the list of available skills in the XML format:</p>
+      <pre><code class="language-xml"><span class="hl-kw">&lt;available_skills&gt;</span>
+  <span class="hl-kw">&lt;skill&gt;</span>
+    <span class="hl-kw">&lt;name&gt;</span>pdf-processing<span class="hl-kw">&lt;/name&gt;</span>
+    <span class="hl-kw">&lt;description&gt;</span>Extract PDF text, fill forms, merge files. Use when handling PDFs.<span class="hl-kw">&lt;/description&gt;</span>
+    <span class="hl-kw">&lt;location&gt;</span>/home/user/.agents/skills/pdf-processing/SKILL.md<span class="hl-kw">&lt;/location&gt;</span>
+  <span class="hl-kw">&lt;/skill&gt;</span>
+  <span class="hl-kw">&lt;skill&gt;</span>
+    <span class="hl-kw">&lt;name&gt;</span>data-analysis<span class="hl-kw">&lt;/name&gt;</span>
+    <span class="hl-kw">&lt;description&gt;</span>Analyze datasets, generate charts, and create summary reports.<span class="hl-kw">&lt;/description&gt;</span>
+    <span class="hl-kw">&lt;location&gt;</span>/home/user/project/.agents/skills/data-analysis/SKILL.md<span class="hl-kw">&lt;/location&gt;</span>
+  <span class="hl-kw">&lt;/skill&gt;</span>
+<span class="hl-kw">&lt;/available_skills&gt;</span></code></pre>
+      <p>The page mentions that when using a dedicated activation tool (which we are) then the <code>location</code> can be omitted, so we'll omit that and provide simply the <code>name</code> and <code>description</code> fields. We'll do that. No <code>location</code>.</p>
+      <p>I have to admit, it feels <em>verbose</em> to use the XML format in the tool description somehow compared to having it in the system prompts. That's just me I guess. I'm thinking this still lands "early enough" in the context window so that the LLM shouldn't forget it, as they <a href="https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00638/119630/Lost-in-the-Middle-How-Language-Models-Use-Long">tend to forget things in the "middle"</a>. Although obviously tools are a larger list later in the context than the system prompt. Because the agentskills.io guide says this is fine, let's roll with it.</p>
+      <h2 id="skill-tool">Skill Tool<a class="heading-anchor" href="#skill-tool" aria-label="Link to this section">#</a></h2>
+      <p>For reference, Claude Code <code>Skill</code> tool definition looks like this:</p>
+      <pre><code class="language-json">{
+  <span class="hl-kw">"name"</span>: <span class="hl-str">"Skill"</span>,
+  <span class="hl-kw">"description"</span>: <span class="hl-str">"Execute a skill within the main conversation\n\nWhen users ask you to perform tasks, check if any of the available skills match. Skills provide specialized capabilities and domain knowledge.\n\nWhen users reference a \"slash command\" or \"/&lt;something&gt;\", they are referring to a skill. Use this tool to invoke it.\n\nHow to invoke:\n- Set `skill` to the exact name of an available skill (no leading slash). For plugin-namespaced skills use the fully qualified `plugin:skill` form.\n- Set `args` to pass optional arguments.\n- Some skills are scoped to a directory: their name is prefixed with the directory (e.g. `apps/web:deploy`) and their description says which directory they apply to. When a skill name has both a scoped and an unscoped variant, pick by the files you are working on: if the files are under a variant's directory, invoke that variant (most specific directory wins); otherwise invoke the unscoped one.\n\nImportant:\n- Available skills are listed in system-reminder messages in the conversation\n- Only invoke a skill that appears in that list, or one the user explicitly typed as `/&lt;name&gt;` in their message. Never guess or invent a skill name from training data; otherwise do not call this tool\n- When a skill matches the user's request, this is a BLOCKING REQUIREMENT: invoke the relevant Skill tool BEFORE generating any other response about the task\n- NEVER mention a skill without actually calling this tool\n- Do not invoke a skill that is already running\n- Do not use this tool for built-in CLI commands (like /help, /clear, etc.)\n- If you see a &lt;command-name&gt; tag in the current conversation turn, the skill has ALREADY been loaded - follow the instructions directly instead of calling this tool again\n"</span>,
+  <span class="hl-kw">"input_schema"</span>: {
+    <span class="hl-kw">"$schema"</span>: <span class="hl-str">"https://json-schema.org/draft/2020-12/schema"</span>,
+    <span class="hl-kw">"type"</span>: <span class="hl-str">"object"</span>,
+    <span class="hl-kw">"properties"</span>: {
+      <span class="hl-kw">"skill"</span>: {
+        <span class="hl-kw">"description"</span>: <span class="hl-str">"The name of a skill from the available-skills list. Do not guess names."</span>,
+        <span class="hl-kw">"type"</span>: <span class="hl-str">"string"</span>
+      },
+      <span class="hl-kw">"args"</span>: {
+        <span class="hl-kw">"description"</span>: <span class="hl-str">"Optional arguments for the skill"</span>,
+        <span class="hl-kw">"type"</span>: <span class="hl-str">"string"</span>
+      }
+    },
+    <span class="hl-kw">"required"</span>: [
+      <span class="hl-str">"skill"</span>
+    ],
+    <span class="hl-kw">"additionalProperties"</span>: <span class="hl-kw">false</span>
+  },
+  <span class="hl-kw">"eager_input_streaming"</span>: <span class="hl-kw">true</span>
+}</code></pre>
+      <p>The description talks about slash commands and directories etc. I don't think everything here will be useful in our context. But there are some pretty interesting parts in the description we could borrow I suppose. Not sure will we do anything with the optional <code>args</code> input field, but I think something like that might be genuinely useful sometimes so we can keep it.</p>
+      <p>The website also <a href="https://agentskills.io/client-implementation/adding-skills-support#structured-wrapping">suggests</a> that we should return the skill activation result in the same sort of xml format as the skill catalog:</p>
+      <pre><code class="language-xml"><span class="hl-kw">&lt;skill_content</span> <span class="hl-fn">name=</span><span class="hl-str">"pdf-processing"</span><span class="hl-kw">&gt;</span>
+# PDF Processing
+
+## When to use this skill
+Use this skill when the user needs to work with PDF files...
+
+[rest of SKILL.md body]
+
+Skill directory: /home/user/.agents/skills/pdf-processing
+Relative paths in this skill are relative to the skill directory.
+
+<span class="hl-kw">&lt;skill_resources&gt;</span>
+  <span class="hl-kw">&lt;file&gt;</span>scripts/extract.py<span class="hl-kw">&lt;/file&gt;</span>
+  <span class="hl-kw">&lt;file&gt;</span>scripts/merge.py<span class="hl-kw">&lt;/file&gt;</span>
+  <span class="hl-kw">&lt;file&gt;</span>references/pdf-spec-summary.md<span class="hl-kw">&lt;/file&gt;</span>
+<span class="hl-kw">&lt;/skill_resources&gt;</span>
+<span class="hl-kw">&lt;/skill_content&gt;</span></code></pre>
+      <p>Sounds like a reasonable idea, so we'll do that.</p>
+      <h2 id="go-stuff">Go stuff<a class="heading-anchor" href="#go-stuff" aria-label="Link to this section">#</a></h2>
+      <p>In a previous post we implemented a simple <code>current_time</code> tool, but that tool didn't even have any inputs it takes. That was cheating a bit honestly. Once we have tools that do have inputs then we need to do few more things because of our multi-model needs. This is a part that I'm not too proud of how it came out, it feels too complex to me, but this sort of things happen with Go from time to time (because they added generics?).</p>
+      <p>Alright, so we have a very fancy way of having type-safe inputs to different <code>Tool</code> implementations now. Here are the types:</p>
+      <pre><code class="language-go"><span class="hl-kw">type</span> ToolResult <span class="hl-kw">struct</span> {
+	Content <span class="hl-kw">string</span>
+	IsError <span class="hl-kw">bool</span>
+}
+
+<span class="hl-com">// ExecCtx is what a tool gets at call time</span>
+<span class="hl-kw">type</span> ExecCtx <span class="hl-kw">struct</span> {
+	Session *Session
+	Sandbox Sandbox
+}
+
+<span class="hl-com">// Tool is the erased interface the dispatcher holds in its map[string]Tool.</span>
+<span class="hl-kw">type</span> Tool <span class="hl-kw">interface</span> {
+	<span class="hl-fn">Definition</span>() model.ToolDefinition
+	<span class="hl-fn">Execute</span>(ctx context.Context, ec *ExecCtx, input json.RawMessage) (ToolResult, <span class="hl-kw">error</span>)
+}
+
+<span class="hl-com">// ToolMeta is the name and description a typed tool declares</span>
+<span class="hl-kw">type</span> ToolMeta <span class="hl-kw">struct</span> {
+	Name        <span class="hl-kw">string</span>
+	Description <span class="hl-kw">string</span>
+}
+
+<span class="hl-com">// TypedTool is what tool authors implement. Args are JSON-decoded and validated</span>
+<span class="hl-com">// against the derived schema by Adapt before Execute runs</span>
+<span class="hl-kw">type</span> TypedTool[T <span class="hl-kw">any</span>] <span class="hl-kw">interface</span> {
+	<span class="hl-fn">Meta</span>() ToolMeta
+	<span class="hl-fn">Execute</span>(ctx context.Context, ec *ExecCtx, args T) (ToolResult, <span class="hl-kw">error</span>)
+}</code></pre>
+      <p>Alright so I will try to briefly explain what is going on. For full details I will leave this <a href="https://github.com/maikdotfi/metaharness/blob/9b8bd70b11bc9eecba9a96c0b66be5e6b7d39cce/TOOLS.md">TOOLS.md</a> file into the repo, but that is verbose and mostly LLM generated to be fairly exhaustive in every way possible. I'll quickly cover the bits that feel important below.</p>
+      <p>We have a <code>Tool</code> interface, this has an <code>Execute</code> method that takes a <code>input</code> of type <code>json.RawMessage</code> (which is just a slice of bytes). But we also have another interface called <code>TypedTool</code> which uses generics.</p>
+      <p>While we can implement tools using simply by implementing the <code>Tool</code> interface, we can also now create typed tools:</p>
+      <pre><code class="language-go"><span class="hl-kw">type</span> Bash <span class="hl-kw">struct</span>{}
+
+<span class="hl-kw">type</span> BashArgs <span class="hl-kw">struct</span> {
+	Cmd <span class="hl-kw">string</span> <span class="hl-str">`json:"cmd" description:"The shell command to run."`</span>
+}
+
+<span class="hl-kw">func</span> (Bash) <span class="hl-fn">Meta</span>() agent.ToolMeta {
+	<span class="hl-kw">return</span> agent.ToolMeta{
+		Name:        <span class="hl-str">"bash"</span>,
+		Description: <span class="hl-str">"Run a shell command in the sandbox."</span>,
+	}
+}
+
+<span class="hl-kw">func</span> (Bash) <span class="hl-fn">Execute</span>(ctx context.Context, ec *agent.ExecCtx, args BashArgs) (agent.ToolResult, <span class="hl-kw">error</span>) {
+	res, err := ec.Sandbox.<span class="hl-fn">Exec</span>(ctx, agent.Command{Cmd: <span class="hl-str">"bash"</span>, Args: []<span class="hl-kw">string</span>{<span class="hl-str">"-c"</span>, args.Cmd}})
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> agent.ToolResult{}, err <span class="hl-com">// infra failure -&gt; fatal</span>
+	}
+	out := res.Stdout
+	<span class="hl-kw">if</span> res.Stderr != <span class="hl-str">""</span> {
+		out += <span class="hl-str">"\n"</span> + res.Stderr
+	}
+	<span class="hl-kw">return</span> agent.ToolResult{Content: out, IsError: res.ExitCode != <span class="hl-num">0</span>}, <span class="hl-kw">nil</span>
+}</code></pre>
+      <p>Note that our tool types all live in the <code>agent</code> pkg, but the tools live in <code>tools</code> pkg.</p>
+      <p>The <code>Bash</code> tool above is a <code>TypedTool</code> because the third argument for the <code>Execute</code> method isn't simply a <code>json.RawMessage</code>.</p>
+      <p>You implement the type yourself if you want methods or other things beyond a single function for the tool. In fact, the bash tool should really use the easy way, but I wanted to show the same example here.</p>
+      <p>As said, you can implement simple tools also in an easier way using this helper function:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> AdaptFunc[T <span class="hl-kw">any</span>](
+	meta ToolMeta,
+	fn <span class="hl-kw">func</span>(ctx context.Context, ec *ExecCtx, args T) (ToolResult, <span class="hl-kw">error</span>),
+) Tool {
+	<span class="hl-kw">return</span> <span class="hl-fn">Adapt</span>(funcTool[T]{meta: meta, fn: fn})
+}</code></pre>
+      <p>This takes in <code>any</code> type that we want to wrap, and returns a valid <code>Tool</code> interface. Only thing we need to really write is the closure (function) that is <em>adapted</em> into a <code>TypedTool</code>.</p>
+      <p>The <code>Adapt</code> generic function wraps the original type (<code>funcTool</code>), storing it in the <code>inner</code> field which is where we can find our closure for execution:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> Adapt[T <span class="hl-kw">any</span>](inner TypedTool[T]) Tool {
+	<span class="hl-kw">return</span> &amp;typedAdapter[T]{
+		inner:  inner,
+		schema: schema.<span class="hl-fn">Generate</span>(reflect.TypeFor[T]()),
+	}
+}</code></pre>
+      <p>What it actually returns is a <code>typedAdapter</code> in the end which has holds a schema that is generated based on reflection.</p>
+      <p>The <code>funcTool</code> type is kinda like necessary evil that we don't even think about, it allows our simple passed in function to grow in to a full type basically. I don't really feel like writing about this more, it is what it is.</p>
+      <p>Our implementation looks like this if we skip some long lines:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">NewSkill</span>(available ...skills.Skill) agent.Tool {
+	byName := <span class="hl-builtin">make</span>(<span class="hl-kw">map</span>[<span class="hl-kw">string</span>]skills.Skill, <span class="hl-builtin">len</span>(available))
+	names := <span class="hl-builtin">make</span>([]<span class="hl-kw">string</span>, <span class="hl-num">0</span>, <span class="hl-builtin">len</span>(available))
+	<span class="hl-kw">for</span> _, s := <span class="hl-kw">range</span> available {
+		byName[s.Name] = s
+		names = <span class="hl-builtin">append</span>(names, s.Name)
+	}
+
+	meta := agent.ToolMeta{
+		Name:        <span class="hl-str">"skill"</span>,
+		Description: skillDescription + <span class="hl-str">"\n\n"</span> + <span class="hl-fn">renderCatalog</span>(available),
+	}
+
+	<span class="hl-kw">return</span> agent.<span class="hl-fn">AdaptFunc</span>(meta,
+		<span class="hl-kw">func</span>(ctx context.Context, ec *agent.ExecCtx, args SkillArgs) (agent.ToolResult, <span class="hl-kw">error</span>) {
+			s, ok := byName[args.Name]
+			<span class="hl-kw">if</span> !ok {
+				<span class="hl-com">// Name the valid options so the model can self-correct on the</span>
+				<span class="hl-com">// next turn instead of retrying blind.</span>
+				<span class="hl-kw">return</span> agent.ToolResult{
+					Content: fmt.<span class="hl-fn">Sprintf</span>(<span class="hl-str">"unknown skill %q; available skills: %s"</span>, args.Name, strings.<span class="hl-fn">Join</span>(names, <span class="hl-str">", "</span>)),
+					IsError: <span class="hl-kw">true</span>,
+				}, <span class="hl-kw">nil</span>
+			}
+			<span class="hl-com">// The wrapper matches the shape promised in the tool description,</span>
+			<span class="hl-com">// and its name attribute is what lets a later turn recognize the</span>
+			<span class="hl-com">// skill as already loaded.</span>
+			<span class="hl-kw">var</span> b strings.Builder
+			fmt.<span class="hl-fn">Fprintf</span>(&amp;b, <span class="hl-str">"&lt;skill_content name=%q&gt;\n%s\n"</span>, s.Name, strings.<span class="hl-fn">TrimRight</span>(s.Instructions, <span class="hl-str">"\n"</span>))
+			<span class="hl-kw">if</span> args.Args != <span class="hl-str">""</span> {
+				fmt.<span class="hl-fn">Fprintf</span>(&amp;b, <span class="hl-str">"\nArguments passed to the skill: %s\n"</span>, args.Args)
+			}
+			b.<span class="hl-fn">WriteString</span>(<span class="hl-str">"&lt;/skill_content&gt;"</span>)
+			<span class="hl-kw">return</span> agent.ToolResult{Content: b.<span class="hl-fn">String</span>()}, <span class="hl-kw">nil</span>
+		},
+	)
+}</code></pre>
+      <p>The <code>NewSkill</code> function is the one we call and pass in all the agent skills we want. There can be a separate <code>skills</code> package that holds all the skills, but time being basically we ware limited to just providing extra instructions as a skill. There is no way the skill becomes files, no scripts or links to additional files possible because nothing is written to a filesystem (atm).</p>
+      <h2 id="tool-execution">Tool Execution<a class="heading-anchor" href="#tool-execution" aria-label="Link to this section">#</a></h2>
+      <p>So we can create a skill inside a test and call the tool:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">TestSkill</span>(t *testing.T) {
+	ec, _ := testutils.<span class="hl-fn">NewExecCtx</span>(t)
+	pirate := skills.Skill{
+		Name:         <span class="hl-str">"pirate_greeting"</span>,
+		Description:  <span class="hl-str">"Greet the user in pirate speak."</span>,
+		Instructions: <span class="hl-str">"Always open with 'Ahoy!' and close with 'Yarr.'"</span>,
+	}
+	tool := <span class="hl-fn">NewSkill</span>(pirate)
+
+	wantCatalog := <span class="hl-str">`&lt;available_skills&gt;
+  &lt;skill&gt;
+    &lt;name&gt;pirate_greeting&lt;/name&gt;
+    &lt;description&gt;Greet the user in pirate speak.&lt;/description&gt;
+  &lt;/skill&gt;
+&lt;/available_skills&gt;`</span>
+
+	def := tool.<span class="hl-fn">Definition</span>()
+	<span class="hl-kw">if</span> !strings.<span class="hl-fn">Contains</span>(def.Description, wantCatalog) {
+		t.<span class="hl-fn">Errorf</span>(<span class="hl-str">"tool description missing catalog block %q, got %q"</span>, wantCatalog, def.Description)
+	}
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"\nDescription: \n\n%s"</span>, def.Description)
+
+	res := testutils.<span class="hl-fn">CallTool</span>(t, ec, tool, SkillArgs{
+		Name: <span class="hl-str">"pirate_greeting"</span>,
+		Args: <span class="hl-str">"the user is named Bob"</span>,
+	})
+	<span class="hl-kw">if</span> res.IsError {
+		t.<span class="hl-fn">Fatalf</span>(<span class="hl-str">"unexpected error: %q"</span>, res.Content)
+	}
+ó
+	want := <span class="hl-str">`&lt;skill_content name="pirate_greeting"&gt;
+Always open with 'Ahoy!' and close with 'Yarr.'
+
+Arguments passed to the skill: the user is named Bob
+&lt;/skill_content&gt;`</span>
+ó	<span class="hl-kw">if</span> res.Content != want {
+		t.<span class="hl-fn">Errorf</span>(<span class="hl-str">"Content = %q, want %q"</span>, res.Content, want)
+	}
+	t.<span class="hl-fn">Logf</span>(<span class="hl-str">"\nContent: \n\n%s"</span>, res.Content)
+}</code></pre>
+      <p>The path to execute the (typed!) tool is a bit convoluted:</p>
+      <p><img src="tool_exec_crayon.png" alt="tool_exec_crayon.png" class="img-full"></p>
+      <p>As we can see the <code>TypedTool</code> will call the closure. But before that the adapter also does some more checks:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> (a *typedAdapter[T]) <span class="hl-fn">Execute</span>(ctx context.Context, ec *ExecCtx, input json.RawMessage) (ToolResult, <span class="hl-kw">error</span>) {
+	<span class="hl-com">// Validate against the schema first so missing required fields, bad enums,</span>
+	<span class="hl-com">// and out-of-range numbers become a clear message fed back to the model</span>
+	<span class="hl-com">// rather than silent Go zero values.</span>
+	<span class="hl-kw">var</span> obj <span class="hl-kw">any</span>
+	<span class="hl-kw">if</span> err := json.<span class="hl-fn">Unmarshal</span>(input, &amp;obj); err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> ToolResult{
+			Content: <span class="hl-str">"invalid arguments: "</span> + err.<span class="hl-fn">Error</span>(),
+			IsError: <span class="hl-kw">true</span>,
+		}, <span class="hl-kw">nil</span>
+	}
+	<span class="hl-kw">if</span> err := schema.<span class="hl-fn">ValidateAgainstSchema</span>(obj, a.schema); err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> ToolResult{
+			Content: <span class="hl-str">"invalid arguments: "</span> + err.<span class="hl-fn">Error</span>(),
+			IsError: <span class="hl-kw">true</span>,
+		}, <span class="hl-kw">nil</span>
+	}
+
+	<span class="hl-kw">var</span> args T
+	<span class="hl-kw">if</span> err := json.<span class="hl-fn">Unmarshal</span>(input, &amp;args); err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> ToolResult{
+			Content: <span class="hl-str">"invalid arguments: "</span> + err.<span class="hl-fn">Error</span>(),
+			IsError: <span class="hl-kw">true</span>,
+		}, <span class="hl-kw">nil</span>
+	}
+	<span class="hl-kw">return</span> a.inner.<span class="hl-fn">Execute</span>(ctx, ec, args)
+}</code></pre>
+      <p>This is the <code>Execute</code> that wraps the <code>inner.Execute</code>. These checks will hopefully prove useful to avoid even actually executing our tool if the input is bogus. We will return context that is hopefully helpful for the LLM to correct the inputs, even before execution of the actual tool. This is main motivation why I decided to introduce this extra typing.</p>
+      <p>Just yesterday I had a coding harness trying to read a file I mentioned via <code>@</code> where it replaced a <code>_</code> in the name with a <code>-</code>, which meant it had to list the files again to realise it's mistake (the tool call could have returned something like "did you mean?" - but it didn't, funny thought?).</p>
+      <p>Small subtle errors are a thing with these LLMs when they generate text. Although this model wasn't Opus or similar bleeding edge frontier one, but still a very good one (IIRC GLM-5.2 was the open weight model in question). While this happened in the argument instead of in the input schema itself, I don't think there is a difference really to the LLM. This experience makes all this extra complexity feel like <strong>it's not YAGNI</strong>, although I feel some of these things done by the machinery can definitely be just handled by writing couple tests.</p>
+      <h2 id="one-final-tangent">One Final Tangent<a class="heading-anchor" href="#one-final-tangent" aria-label="Link to this section">#</a></h2>
+      <p>It's pretty tiring to read the agentskills.io website when the text is full of em dashes and overall the text is just so... plain. Some of the em dashes just feel sort of force fed by the LLM, like this one:</p>
+      <blockquote><p>Other scopes are possible too — for example, organization-wide skills deployed by an admin, or skills bundled with the agent itself.</p></blockquote>
+      <p>However, all the information is in there so I can't complain too much. It's just not very well and concisely presented IMO. I'm very much against having people read something you don't bother writing, but that does not mean you cannot use LLMs to help you write. I'm absolutely fine with that, as long as the text isn't by and large generated..</p>
+      <h2 id="conclusion">Conclusion<a class="heading-anchor" href="#conclusion" aria-label="Link to this section">#</a></h2>
+      <p>The skill tool itself isn't that complex really, just had to do some extra stuff. I've also at the same time implemented the other "core" tools like <code>bash</code>, <code>read_file</code> and <code>edit_file</code>, but I found there is not much to write home about those. For this post the code is <a href="https://github.com/maikdotfi/metaharness/blob/9b8bd70b11bc9eecba9a96c0b66be5e6b7d39cce/tools/skill.go">here</a> (a commit at the time).</p>
+      <p>Next I think we'll run an agent for real and talk about putting the things built so far together. All the glue has kinda been visible the whole time in function signatures, but I haven't covered those parts yet.</p>
+
+    </article>
+  </div>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const toggle = document.querySelector('.theme-toggle');
+      if (!toggle) return;
+
+      const storageKey = 'maikfi-theme';
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = (theme) => {
+        if (theme === 'light' || theme === 'dark') {
+          root.setAttribute('data-theme', theme);
+        } else {
+          root.removeAttribute('data-theme');
+        }
+
+        const effective = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const label = effective === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        toggle.setAttribute('aria-pressed', effective === 'dark');
+        toggle.setAttribute('aria-label', label);
+        toggle.setAttribute('title', label);
+      };
+
+      const stored = localStorage.getItem(storageKey);
+      const initial = stored === 'light' || stored === 'dark' ? stored : null;
+      if (stored && !initial) {
+        localStorage.removeItem(storageKey);
+      }
+      applyTheme(initial);
+
+      toggle.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(storageKey, next);
+        applyTheme(next);
+      });
+
+      mediaQuery.addEventListener('change', (event) => {
+        if (!localStorage.getItem(storageKey)) {
+          applyTheme(event.matches ? 'dark' : 'light');
+        }
+      });
+    }());
+  </script>
+</body>
+</html>
