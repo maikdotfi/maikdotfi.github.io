@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent the Hard Way: Putting it together | maik.fi</title>
+  <link rel="icon" href="../favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f1ea;
+      --bg-tint: #ece7dc;
+      --fg: #1c1a16;
+      --muted-fg: #756f63;
+      --accent: #b14a26;
+      --rule: #d8d2c4;
+      --code-bg: #ede7d8;
+      --code-border: #dad1bd;
+      --tok-com: #8a8372;
+      --tok-kw: #9c3d1f;
+      --tok-str: #4f6a2e;
+      --tok-num: #8a5a12;
+      --tok-fn: #345b6b;
+      --tok-builtin: #7a4a86;
+      --display: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+        --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+        --code-bg: #24241c; --code-border: #33332a;
+        --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+        --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f1ea; --bg-tint: #ece7dc; --fg: #1c1a16;
+      --muted-fg: #756f63; --accent: #b14a26; --rule: #d8d2c4;
+      --code-bg: #ede7d8; --code-border: #dad1bd;
+      --tok-com: #8a8372; --tok-kw: #9c3d1f; --tok-str: #4f6a2e;
+      --tok-num: #8a5a12; --tok-fn: #345b6b; --tok-builtin: #7a4a86;
+      color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #131310; --bg-tint: #1c1c17; --fg: #ece7dc;
+      --muted-fg: #989083; --accent: #e08a5f; --rule: #2c2c25;
+      --code-bg: #24241c; --code-border: #33332a;
+      --tok-com: #7d766a; --tok-kw: #e39068; --tok-str: #a9c47a;
+      --tok-num: #d9a878; --tok-fn: #7bb0c4; --tok-builtin: #c39bd0;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      color: var(--fg);
+      font-family: var(--body);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      max-width: 50rem;
+      margin: 0 auto;
+      padding: clamp(2rem, 5vw, 3.5rem) 1.6rem 6rem;
+    }
+
+     
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+    }
+
+    .nav-links { display: flex; gap: 1.5rem; align-items: baseline; }
+
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      transition: color 180ms ease;
+    }
+
+    nav a:hover,
+    nav a:focus-visible { color: var(--accent); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--muted-fg);
+      cursor: pointer;
+      transition: color 180ms ease, transform 300ms ease;
+    }
+
+    .theme-toggle svg { width: 1.6rem; height: 1.6rem; }
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible { color: var(--accent); transform: rotate(-12deg); }
+    .theme-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+     
+    article { margin-top: clamp(3rem, 7vw, 5rem); }
+
+    article > header {
+      margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 750;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.2rem;
+      max-width: 18ch;
+    }
+
+    .meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted-fg);
+      margin: 0;
+    }
+
+    .tags {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .tag::before { content: "#"; opacity: 0.45; margin-right: 0.15em; }
+
+     
+    article > p,
+    article > ul,
+    article > blockquote,
+    article > pre,
+    article > h2,
+    article > h3,
+    article > h4 {
+      animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: 120ms;
+    }
+
+    article p { margin: 1.4rem 0; }
+
+    article > p:first-of-type { margin-top: 0; }
+
+    h2, h3, h4 {
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 2.6rem 0 0.9rem;
+    }
+
+    h2 { font-size: 1.65rem; }
+    h3 { font-size: 1.3rem; }
+    h4 { font-size: 1.1rem; }
+
+     
+    .heading-anchor {
+      margin-left: 0.35em;
+      color: var(--muted-fg);
+      font-weight: 400;
+      text-decoration: none;
+      background: none;
+      opacity: 0;
+      transition: opacity 160ms ease, color 160ms ease;
+    }
+    h2:hover .heading-anchor,
+    h3:hover .heading-anchor,
+    h4:hover .heading-anchor,
+    .heading-anchor:focus-visible { opacity: 0.65; }
+    .heading-anchor:hover { opacity: 1; color: var(--accent); }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: 100% 1px;
+      background-position: 0 1.15em;
+      background-repeat: no-repeat;
+      transition: background-position 160ms ease, opacity 160ms ease;
+    }
+
+    a:hover,
+    a:focus-visible { opacity: 0.7; }
+
+    article ul {
+      margin: 1.4rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    article ol {
+      margin: 1.4rem 0;
+      padding-left: 1.6rem;
+    }
+
+    article li {
+      margin: 0.5rem 0;
+    }
+
+    article ul li {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    article ol li::marker {
+      color: var(--accent);
+    }
+
+    article ul li::before {
+      content: "";
+      position: absolute;
+      left: 0.1rem;
+      top: 0.72em;
+      width: 0.4rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    article pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-left: 2px solid var(--accent);
+      border-radius: 0;
+      padding: 1.2rem 1.3rem;
+      overflow-x: auto;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      margin: 1.8rem 0;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.86em;
+    }
+
+     
+    article pre code { font-size: 1em; }
+
+     
+    article pre .hl-com     { color: var(--tok-com); font-style: italic; }
+    article pre .hl-kw      { color: var(--tok-kw); }
+    article pre .hl-str     { color: var(--tok-str); }
+    article pre .hl-num     { color: var(--tok-num); }
+    article pre .hl-fn      { color: var(--tok-fn); }
+    article pre .hl-builtin { color: var(--tok-builtin); }
+
+    article p code,
+    article li code {
+      background: var(--code-bg);
+      padding: 0.12rem 0.4rem;
+      border-radius: 0;
+    }
+
+    article img {
+      max-width: 50%;
+      height: auto;
+      border-radius: 0;
+      margin: 2rem auto;
+      display: block;
+    }
+
+    article img.img-small { max-width: 30%; }
+    article img.img-wide { max-width: 80%; }
+    article img.img-full { max-width: 100%; }
+
+    article blockquote {
+      margin: 2rem 0;
+      padding: 0 0 0 2.2rem;
+      position: relative;
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.35rem;
+      line-height: 1.45;
+      color: var(--fg);
+    }
+
+    article blockquote::before {
+      content: "\201C";
+      position: absolute;
+      left: -0.1rem;
+      top: 0.35rem;
+      font-family: var(--display);
+      font-size: 3.4rem;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    article blockquote p { margin: 0; }
+
+    .footnotes {
+      border-top: 1px solid var(--rule);
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      font-size: 0.92rem;
+      color: var(--muted-fg);
+    }
+
+    .footnotes ol { margin: 0; padding-left: 1.3rem; }
+    .footnotes li { line-height: 1.6; margin: 0.4rem 0; }
+
+    sup a { background: none; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="nav-links">
+        <a href="index.html">← All writing</a>
+        <a href="../index.html">maik.fi</a>
+      </div>
+      <button type="button" class="theme-toggle" aria-pressed="false" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 256 256" aria-hidden="true">
+          <rect width="256" height="256" fill="none"/>
+          <polygon points="64 40 192 40 240 152 16 152 64 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="128" y1="152" x2="128" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="96" y1="216" x2="160" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+          <line x1="200" y1="152" x2="200" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
+        </svg>
+      </button>
+    </nav>
+    <article>
+      <header>
+        <h1>Agent the Hard Way: Putting it together</h1>
+        <p class="meta">
+          <time datetime="2026-07-31">July 31, 2026</time> — by Mike
+        </p>
+        <div class="tags"><span class="tag">hard way</span><span class="tag">agentic coding</span><span class="tag">llms</span>
+        </div>
+      </header>
+      <p>For the first time let's actually create a <code>main.go</code> and run an agent.</p>
+      <h2 id="code-review-agent">Code Review Agent<a class="heading-anchor" href="#code-review-agent" aria-label="Link to this section">#</a></h2>
+      <p>We'll put together a code review agent. It will be given basic coding agent tools to use (bash, read, write, edit). You could think a code review agent does not need access to edit files, but I kinda do think it needs access to bash so it would be silly not to let it use edit files too. In addition it will have the <code>skill</code> tool and a skill for the review of course, it's not just a generic coding agent given a review task... It's something special.</p>
+      <h2 id="grug-review">Grug Review<a class="heading-anchor" href="#grug-review" aria-label="Link to this section">#</a></h2>
+      <p>Our code review skill is a bit special. It is, of course, based on the legendary <a href="https://grugbrain.dev/">Grug Brained Developer</a> article which I adore.</p>
+      <p>This skill is simply defined in Go:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">GrugReview</span>() Skill {
+	<span class="hl-kw">return</span> Skill{
+		Name:         <span class="hl-str">"grug-review"</span>,
+		Description:  <span class="hl-str">"Review code for complexity, brittle APIs, bugs, and changes that would make maintainers reach for the club."</span>,
+		Instructions: grugReviewSkillInstruction,
+	}
+}
+
+<span class="hl-kw">const</span> grugReviewSkillInstruction = <span class="hl-str">`Review code looking for things that would lead the grug brained developer to reach for his club.
+...`</span></code></pre>
+      <p>The full instructions/<code>SKILL.md</code> is way too long to include here, but you can read it all <a href="https://github.com/maikdotfi/metaharness/blob/main/skills/grugreview.go">here</a>.</p>
+      <h2 id="main-go">main.go<a class="heading-anchor" href="#main-go" aria-label="Link to this section">#</a></h2>
+      <p>We'll make it possible to set <code>ANTHROPIC_API_URL</code> and of course <code>ANTHROPIC_API_TOKEN</code> to use another provider (Ollama in my case):</p>
+      <pre><code class="language-go"><span class="hl-kw">package</span> main
+
+<span class="hl-kw">import</span> (
+	<span class="hl-str">"context"</span>
+	<span class="hl-str">"flag"</span>
+	<span class="hl-str">"fmt"</span>
+	<span class="hl-str">"log"</span>
+	<span class="hl-str">"os"</span>
+	<span class="hl-str">"time"</span>
+
+	<span class="hl-str">"github.com/maikdotfi/metaharness/agent"</span>
+	<span class="hl-str">"github.com/maikdotfi/metaharness/model"</span>
+	<span class="hl-str">"github.com/maikdotfi/metaharness/sandbox"</span>
+	<span class="hl-str">"github.com/maikdotfi/metaharness/skills"</span>
+	<span class="hl-str">"github.com/maikdotfi/metaharness/tools"</span>
+)
+
+<span class="hl-kw">const</span> systemPrompt = <span class="hl-str">`You are a code review agent. Review the Go code in the current working directory.
+
+Inspect the code and tests with your file tools, run anything useful (like go test ./...) with bash, and finish with review feedback that references files and line numbers.
+
+Before writing any feedback, load the grug-review skill with the skill tool and follow its instructions for the tone and focus of the review.`</span>
+
+<span class="hl-kw">const</span> defaultPrompt = <span class="hl-str">"Review this checkout package. Inspect the code and tests, run anything useful, and return review feedback with file and line references."</span>
+
+<span class="hl-kw">func</span> <span class="hl-fn">main</span>() {
+	modelName := flag.<span class="hl-fn">String</span>(<span class="hl-str">"model"</span>, <span class="hl-str">"gemma4:31b-cloud"</span>, <span class="hl-str">"Anthropic model id"</span>)
+	workdir := flag.<span class="hl-fn">String</span>(<span class="hl-str">"workdir"</span>, <span class="hl-str">"checkout"</span>, <span class="hl-str">"directory the agent's tools run in"</span>)
+	prompt := flag.<span class="hl-fn">String</span>(<span class="hl-str">"prompt"</span>, defaultPrompt, <span class="hl-str">"user prompt to start the review with"</span>)
+	think := flag.<span class="hl-fn">Bool</span>(<span class="hl-str">"think"</span>, <span class="hl-kw">false</span>, <span class="hl-str">"enable extended thinking output"</span>)
+	effort := flag.<span class="hl-fn">String</span>(<span class="hl-str">"effort"</span>, <span class="hl-str">"medium"</span>, <span class="hl-str">"thinking effort level (low, medium, high, xhigh, max); only used with -think"</span>)
+	flag.<span class="hl-fn">Parse</span>()
+
+	<span class="hl-kw">if</span> os.<span class="hl-fn">Getenv</span>(<span class="hl-str">"ANTHROPIC_API_KEY"</span>) == <span class="hl-str">""</span> {
+		log.<span class="hl-fn">Fatal</span>(<span class="hl-str">"ANTHROPIC_API_KEY is not set"</span>)
+	}
+	<span class="hl-kw">if</span> err := <span class="hl-fn">run</span>(context.<span class="hl-fn">Background</span>(), *modelName, *workdir, *prompt, *think, *effort); err != <span class="hl-kw">nil</span> {
+		log.<span class="hl-fn">Fatal</span>(err)
+	}
+}
+
+<span class="hl-kw">func</span> <span class="hl-fn">run</span>(ctx context.Context, modelName, workdir, prompt <span class="hl-kw">string</span>, think <span class="hl-kw">bool</span>, effort <span class="hl-kw">string</span>) <span class="hl-kw">error</span> {
+	cfg := model.Config{
+		Provider: model.ProviderAnthropic,
+		APIKey:   os.<span class="hl-fn">Getenv</span>(<span class="hl-str">"ANTHROPIC_API_KEY"</span>),
+		BaseURL:  os.<span class="hl-fn">Getenv</span>(<span class="hl-str">"ANTHROPIC_API_URL"</span>),
+	}
+	<span class="hl-kw">if</span> think {
+		cfg.Thinking = &amp;model.Thinking{Effort: model.<span class="hl-fn">Effort</span>(effort)}
+	}
+	m, err := model.<span class="hl-fn">New</span>(cfg)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> err
+	}
+
+	box, err := sandbox.<span class="hl-fn">Dir</span>(workdir)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> err
+	}
+
+	a := agent.<span class="hl-fn">New</span>(systemPrompt,
+		agent.<span class="hl-fn">WithModel</span>(m),
+		agent.<span class="hl-fn">WithTools</span>(
+			agent.<span class="hl-fn">Adapt</span>(tools.Bash{}),
+			agent.<span class="hl-fn">Adapt</span>(tools.ReadFile{}),
+			agent.<span class="hl-fn">Adapt</span>(tools.EditFile{}),
+			agent.<span class="hl-fn">Adapt</span>(tools.WriteFile{}),
+			tools.<span class="hl-fn">NewSkill</span>(skills.<span class="hl-fn">GrugReview</span>()),
+		),
+	)
+
+	sess := agent.<span class="hl-fn">NewSession</span>(fmt.<span class="hl-fn">Sprintf</span>(<span class="hl-str">"review-%d"</span>, time.<span class="hl-fn">Now</span>().<span class="hl-fn">Unix</span>()), modelName, box)
+	<span class="hl-kw">defer</span> sess.<span class="hl-fn">Close</span>()
+	sess.Messages = <span class="hl-builtin">append</span>(sess.Messages, model.<span class="hl-fn">NewUserMessage</span>(prompt))
+	fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"session %s in sandbox %s\n\n"</span>, sess.ID, sess.<span class="hl-fn">SandboxName</span>())
+
+	events, err := a.<span class="hl-fn">Run</span>(ctx, sess)
+	<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+		<span class="hl-kw">return</span> err
+	}
+	<span class="hl-kw">for</span> ev := <span class="hl-kw">range</span> events {
+		<span class="hl-kw">switch</span> ev.Type {
+		<span class="hl-kw">case</span> agent.EventAssistant:
+			<span class="hl-fn">printAssistant</span>(ev.Message)
+		<span class="hl-kw">case</span> agent.EventToolResult:
+			<span class="hl-fn">printToolResult</span>(ev.Message)
+		<span class="hl-kw">case</span> agent.EventDone:
+			fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"\n--- done: %d input tokens, %d output tokens ---\n"</span>,
+				sess.Usage.InputTokens, sess.Usage.OutputTokens)
+		<span class="hl-kw">case</span> agent.EventError:
+			<span class="hl-kw">return</span> ev.Err
+		}
+	}
+	<span class="hl-kw">return</span> <span class="hl-kw">nil</span>
+}</code></pre>
+      <p>You also saw these couple helping functions, nothing much to mention about them as you probably guessed:</p>
+      <pre><code class="language-go"><span class="hl-kw">func</span> <span class="hl-fn">printAssistant</span>(m *model.Message) {
+	<span class="hl-kw">for</span> _, reasoning := <span class="hl-kw">range</span> model.<span class="hl-fn">ReasoningParts</span>(m) {
+		<span class="hl-kw">if</span> reasoning.Text != <span class="hl-str">""</span> {
+			fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"\n💭 %s\n"</span>, reasoning.Text)
+		}
+	}
+	<span class="hl-kw">for</span> _, text := <span class="hl-kw">range</span> model.<span class="hl-fn">TextParts</span>(m) {
+		<span class="hl-kw">if</span> text.Text != <span class="hl-str">""</span> {
+			fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"\n%s\n"</span>, text.Text)
+		}
+	}
+	<span class="hl-kw">for</span> _, call := <span class="hl-kw">range</span> model.<span class="hl-fn">ToolCalls</span>(m) {
+		fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"→ %s %s\n"</span>, call.Name, <span class="hl-fn">clip</span>(call.Input, <span class="hl-num">120</span>))
+	}
+}
+
+<span class="hl-kw">func</span> <span class="hl-fn">printToolResult</span>(m *model.Message) {
+	<span class="hl-kw">for</span> _, result := <span class="hl-kw">range</span> model.<span class="hl-fn">ToolResults</span>(m) {
+		<span class="hl-kw">if</span> result.Error != <span class="hl-kw">nil</span> {
+			fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"← error: %v\n"</span>, result.Error)
+		} <span class="hl-kw">else</span> {
+			fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"← %s\n"</span>, <span class="hl-fn">clip</span>(result.Text, <span class="hl-num">200</span>))
+		}
+	}
+}
+
+<span class="hl-com">// clip keeps event logging one-line-ish.</span>
+<span class="hl-kw">func</span> <span class="hl-fn">clip</span>(s <span class="hl-kw">string</span>, n <span class="hl-kw">int</span>) <span class="hl-kw">string</span> {
+	<span class="hl-kw">if</span> <span class="hl-builtin">len</span>(s) &lt;= n {
+		<span class="hl-kw">return</span> s
+	}
+	<span class="hl-kw">return</span> s[:n] + <span class="hl-str">"…"</span>
+}</code></pre>
+      <p>I rather like how the agent is constructed using the <a href="https://github.com/tmrts/go-patterns/blob/master/idiom/functional-options.md">functional options pattern</a>:</p>
+      <pre><code class="language-go">a := agent.<span class="hl-fn">New</span>(systemPrompt,
+	agent.<span class="hl-fn">WithModel</span>(m),
+	agent.<span class="hl-fn">WithTools</span>(
+		agent.<span class="hl-fn">Adapt</span>(tools.Bash{}),
+		agent.<span class="hl-fn">Adapt</span>(tools.ReadFile{}),
+		agent.<span class="hl-fn">Adapt</span>(tools.EditFile{}),
+		agent.<span class="hl-fn">Adapt</span>(tools.WriteFile{}),
+		tools.<span class="hl-fn">NewSkill</span>(skills.<span class="hl-fn">GrugReview</span>()),
+	),
+)</code></pre>
+      <p>We can see there the whole skills thing just passed as another tool.</p>
+      <p>Then when we run this we pass in the session, so that session (the messages rather) could be stored somewhere in future. We start it up and receive a channel we can then listen for the events to show a user, or just log out to stdout/telemetry backends:</p>
+      <pre><code class="language-go">events, err := a.<span class="hl-fn">Run</span>(ctx, sess)
+<span class="hl-kw">if</span> err != <span class="hl-kw">nil</span> {
+	<span class="hl-kw">return</span> err
+}
+<span class="hl-kw">for</span> ev := <span class="hl-kw">range</span> events {
+	<span class="hl-kw">switch</span> ev.Type {
+	<span class="hl-kw">case</span> agent.EventAssistant:
+		<span class="hl-fn">printAssistant</span>(ev.Message)
+	<span class="hl-kw">case</span> agent.EventToolResult:
+		<span class="hl-fn">printToolResult</span>(ev.Message)
+	<span class="hl-kw">case</span> agent.EventDone:
+		fmt.<span class="hl-fn">Printf</span>(<span class="hl-str">"\n--- done: %d input tokens, %d output tokens ---\n"</span>,
+			sess.Usage.InputTokens, sess.Usage.OutputTokens)
+	<span class="hl-kw">case</span> agent.EventError:
+		<span class="hl-kw">return</span> ev.Err
+	}
+}</code></pre>
+      <h2 id="let-it-rip">Let it rip<a class="heading-anchor" href="#let-it-rip" aria-label="Link to this section">#</a></h2>
+      <p>Alright let's run this once without and then with thinking.</p>
+      <p>First without thinking flags:</p>
+      <pre><code class="language-bash">go run .
+session review-1784888752
+
+→ skill {<span class="hl-str">"skill"</span>:<span class="hl-str">"grug-review"</span>}
+← &lt;skill_content name=<span class="hl-str">"grug-review"</span>&gt;
+Review code looking <span class="hl-kw">for</span> things that would lead the grug brained developer to reach <span class="hl-kw">for</span> his club.
+Use the grug brained developer tone when giving the feedback.
+
+Below…
+→ bash {<span class="hl-str">"cmd"</span>:<span class="hl-str">"find . -maxdepth 2 -not -path '*/.*'"</span>}
+← .
+./go.mod
+./cart.go
+./cart_test.go
+
+→ read_file {<span class="hl-str">"path"</span>:<span class="hl-str">"cart.go"</span>}
+←      <span class="hl-num">1</span>        package checkout
+     <span class="hl-num">2</span>
+     <span class="hl-num">3</span>  import <span class="hl-str">"fmt"</span>
+     <span class="hl-num">4</span>
+     <span class="hl-num">5</span>  // Inventory maps a SKU to the number of units available.
+     <span class="hl-num">6</span>  <span class="hl-builtin">type</span> Inventory map[string]int
+     <span class="hl-num">7</span>
+     <span class="hl-num">8</span>  <span class="hl-builtin">type</span> Item struct {
+    …
+→ read_file {<span class="hl-str">"path"</span>:<span class="hl-str">"cart_test.go"</span>}
+←      <span class="hl-num">1</span>        package checkout
+     <span class="hl-num">2</span>
+     <span class="hl-num">3</span>  import <span class="hl-str">"testing"</span>
+     <span class="hl-num">4</span>
+     <span class="hl-num">5</span>  func TestTotalCentsAppliesCoupon(t *testing.T) {
+     <span class="hl-num">6</span>          var cart Cart
+     <span class="hl-num">7</span>          <span class="hl-kw">if</span> err := cart.Add(<span class="hl-str">"coffee"</span>, 2, 500); err != nil {…
+→ bash {<span class="hl-str">"cmd"</span>:<span class="hl-str">"go test -v ./..."</span>}
+← error: === RUN   TestTotalCentsAppliesCoupon
+--- PASS: TestTotalCentsAppliesCoupon (0.00s)
+=== RUN   TestAddRejectsNegativeQuantities
+    cart_test.go:21: expected negative quantity to be rejected
+--- FAIL: TestAddRejectsNegativeQuantities (0.00s)
+=== RUN   TestCheckoutRejectsMissingInventory
+--- PASS: TestCheckoutRejectsMissingInventory (0.00s)
+FAIL
+FAIL    example.com/checkout    0.354s
+FAIL
+
+
+grug look at code. grug find things that make grug reach <span class="hl-kw">for</span> club.
+
+<span class="hl-com">### 1. Bug: Grug find lie in test</span>
+<span class="hl-str">`</span>cart_test.go:17<span class="hl-str">`</span> say it reject negative quantity. But <span class="hl-str">`</span>cart.go:24<span class="hl-str">`</span> not check quantity!
+Test fail because code not <span class="hl-kw">do</span> what it say. This make grug very angry. Fix code or fix test, but not lie to grug.
+
+<span class="hl-com">### 2. Precision: Math go boom</span>
+<span class="hl-str">`</span>cart.go:52<span class="hl-str">`</span>: <span class="hl-str">`</span>lineTotal -= lineTotal * c.Coupon.PercentOff / 100<span class="hl-str">`</span>
+This is <span class="hl-str">"big brain"</span> math. If <span class="hl-str">`</span>PercentOff<span class="hl-str">`</span> is 100, total 0. Good. But <span class="hl-kw">if</span> <span class="hl-str">`</span>PercentOff<span class="hl-str">`</span> is 110, price become negative? Store pay customer to take item?
+Grug not like store giving money away. Put limit on coupon or use better math.
+
+<span class="hl-com">### 3. API: Coupon too simple</span>
+<span class="hl-str">`</span>cart.go:40<span class="hl-str">`</span>: <span class="hl-str">`</span>ApplyCoupon(code string, percentOff int)<span class="hl-str">`</span>
+Why grug need to tell cart how much percent off? Cart should just take <span class="hl-str">`</span>code<span class="hl-str">`</span>. If cart know percent, cart is doing too much. Logic <span class="hl-kw">for</span> <span class="hl-str">"what code means"</span> should be in separate place, not passed in by whoever call <span class="hl-str">`</span>ApplyCoupon<span class="hl-str">`</span>.
+
+<span class="hl-com">### 4. Complexity: Inventory map</span>
+<span class="hl-str">`</span>cart.go:59<span class="hl-str">`</span>: <span class="hl-str">`</span>Checkout(inventory Inventory)<span class="hl-str">`</span>
+Pass map of all things in world to checkout? Very big brain. Very brittle.
+If inventory is huge, grug think too much. Better to have <span class="hl-str">`</span>Inventory<span class="hl-str">`</span> be thing with <span class="hl-str">`</span>Check(sku, qty)<span class="hl-str">`</span> method.
+
+<span class="hl-com">### Summary for big brain:</span>
+- <span class="hl-str">`</span>cart.go:24<span class="hl-str">`</span>: Missing check <span class="hl-kw">for</span> <span class="hl-str">`</span>quantity &lt; 0<span class="hl-str">`</span>.
+- <span class="hl-str">`</span>cart.go:52<span class="hl-str">`</span>: Potential <span class="hl-kw">for</span> negative totals with high coupon values.
+- <span class="hl-str">`</span>cart.go:40<span class="hl-str">`</span>: API leak. Caller should not provide the discount value.
+- <span class="hl-str">`</span>cart.go:59<span class="hl-str">`</span>: Poor abstraction of inventory.
+
+--- <span class="hl-kw">done</span>: <span class="hl-num">11346</span> input tokens, <span class="hl-num">556</span> output tokens ---</code></pre>
+      <p>Nice! Our grug brained reviewer didn't really appreciate the big brain stuff going on in the <a href="https://github.com/maikdotfi/metaharness/tree/main/examples/code-review/checkout">checkout example code</a>.</p>
+      <h2 id="thinking">Thinking<a class="heading-anchor" href="#thinking" aria-label="Link to this section">#</a></h2>
+      <p>We can also run with thinking enabled and printed to the screen:</p>
+      <pre><code class="language-bash">go run . -think -effort medium
+session review-1784897445
+
+
+💭 Okay, I need to review the checkout package.
+First, I<span class="hl-str">'ll start by loading the `grug-review` skill to understand the desired tone and focus.
+→ skill {"skill":"grug-review"}
+← &lt;skill_content name="grug-review"&gt;
+Review code looking for things that would lead the grug brained developer to reach for his club.
+Use the grug brained developer tone when giving the feedback.
+
+Below…
+
+💭 Okay, I need to review the "checkout package". First, I need to see what files are in the current directory.
+→ bash {"cmd":"find . -maxdepth 2 -not -path '</span>*/.*<span class="hl-str">'"}
+← .
+./go.mod
+./cart.go
+./cart_test.go
+
+
+💭 Okay, I see `cart.go` and `cart_test.go`. I'</span>ll start by reading these files to understand the implementation.
+→ read_file {<span class="hl-str">"path"</span>:<span class="hl-str">"cart.go"</span>}
+←      <span class="hl-num">1</span>        package checkout
+     <span class="hl-num">2</span>
+     <span class="hl-num">3</span>  import <span class="hl-str">"fmt"</span>
+     <span class="hl-num">4</span>
+     <span class="hl-num">5</span>  // Inventory maps a SKU to the number of units available.
+     <span class="hl-num">6</span>  <span class="hl-builtin">type</span> Inventory map[string]int
+     <span class="hl-num">7</span>
+     <span class="hl-num">8</span>  <span class="hl-builtin">type</span> Item struct {
+    …
+
+💭 Okay, I<span class="hl-str">'ve read `cart.go`. Now I'</span>ll <span class="hl-builtin">read</span> <span class="hl-str">`</span>cart_test.go<span class="hl-str">`</span> to see how it<span class="hl-str">'s being used and if there are any bugs I can find with tests.
+→ read_file {"path":"cart_test.go"}
+←      1        package checkout
+     2
+     3  import "testing"
+     4
+     5  func TestTotalCentsAppliesCoupon(t *testing.T) {
+     6          var cart Cart
+     7          if err := cart.Add("coffee", 2, 500); err != nil {…
+
+💭 Okay, I'</span>ve <span class="hl-builtin">read</span> the code. Let<span class="hl-str">'s look for "complexity" and things that make Grug reach for the club.
+
+1.  `cart.go:24`: `Add` method.
+    *   It checks for empty SKU and negative unit price.
+    *   Wait, it *doesn'</span>t* check <span class="hl-kw">for</span> negative quantity.
+    *   <span class="hl-str">`</span>cart_test.go:17<span class="hl-str">`</span>: <span class="hl-str">`</span>TestAddRejectsNegativeQuantities<span class="hl-str">`</span> exists, but it<span class="hl-str">'s testing that it *should* be rejected. Let'</span>s see <span class="hl-kw">if</span> it actually is.
+
+Wait, I see:
+<span class="hl-str">`</span>cart.go<span class="hl-str">`</span>:
+<span class="hl-str">```</span>go
+<span class="hl-num">24</span>      func (c *Cart) Add(sku string, quantity int, unitPriceCents int) error {
+<span class="hl-num">25</span>              <span class="hl-kw">if</span> sku == <span class="hl-str">""</span> {
+<span class="hl-num">26</span>                      <span class="hl-kw">return</span> fmt.Errorf(<span class="hl-str">"sku is required"</span>)
+<span class="hl-num">27</span>              }
+<span class="hl-num">28</span>              <span class="hl-kw">if</span> unitPriceCents &lt; <span class="hl-num">0</span> {
+<span class="hl-num">29</span>                      <span class="hl-kw">return</span> fmt.Errorf(<span class="hl-str">"unit price cannot be negative"</span>)
+<span class="hl-num">30</span>              }
+<span class="hl-num">31</span>
+<span class="hl-num">32</span>              c.Items = append(c.Items, Item{
+<span class="hl-num">33</span>                      SKU:            sku,
+<span class="hl-num">34</span>                      Quantity:       quantity,
+<span class="hl-num">35</span>                      UnitPriceCents: unitPriceCents,
+<span class="hl-num">36</span>              })
+<span class="hl-num">37</span>              <span class="hl-kw">return</span> nil
+<span class="hl-num">38</span>      }
+<span class="hl-str">```</span>
+There is no check <span class="hl-kw">for</span> <span class="hl-str">`</span>quantity &lt; 0<span class="hl-str">`</span>.
+
+Let<span class="hl-str">'s run the tests to see if they fail.
+→ bash {"cmd":"go test ./..."}
+← error: --- FAIL: TestAddRejectsNegativeQuantities (0.00s)
+    cart_test.go:21: expected negative quantity to be rejected
+FAIL
+FAIL    example.com/checkout    0.343s
+FAIL
+
+
+💭 Okay, I'</span>ve reviewed the code.
+1. <span class="hl-str">`</span>cart.go<span class="hl-str">`</span> contains the logic <span class="hl-kw">for</span> a shopping cart.
+2. <span class="hl-str">`</span>cart_test.go<span class="hl-str">`</span> contains some tests.
+3. Running <span class="hl-str">`</span>go <span class="hl-builtin">test</span> ./...<span class="hl-str">`</span> failed. <span class="hl-str">`</span>TestAddRejectsNegativeQuantities<span class="hl-str">`</span> failed because <span class="hl-str">`</span>cart.Add<span class="hl-str">`</span> does not check <span class="hl-kw">for</span> negative quantities.
+
+Looking at <span class="hl-str">`</span>cart.go<span class="hl-str">`</span>:
+- Line 24-38: <span class="hl-str">`</span>Add<span class="hl-str">`</span> method. It checks <span class="hl-kw">if</span> <span class="hl-str">`</span>sku<span class="hl-str">`</span> is empty and <span class="hl-kw">if</span> <span class="hl-str">`</span>unitPriceCents<span class="hl-str">`</span> is negative. It *does not* check <span class="hl-kw">if</span> <span class="hl-str">`</span>quantity<span class="hl-str">`</span> is negative. This is a bug.
+- Line 47-57: <span class="hl-str">`</span>TotalCents<span class="hl-str">`</span> method. It applies a coupon to each item. If <span class="hl-str">`</span>PercentOff<span class="hl-str">`</span> is &gt; 100, <span class="hl-str">`</span>lineTotal<span class="hl-str">`</span> could become negative. If <span class="hl-str">`</span>PercentOff<span class="hl-str">`</span> is very large, the total could be weird.
+- Line 59-67: <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> method. It checks inventory.
+
+Wait, the tests are failing.
+<span class="hl-str">`</span>TestAddRejectsNegativeQuantities<span class="hl-str">`</span> fails because line <span class="hl-num">20</span> in <span class="hl-str">`</span>cart_test.go<span class="hl-str">`</span> expects an error when quantity is -2, but <span class="hl-str">`</span>cart.Add<span class="hl-str">`</span> in <span class="hl-str">`</span>cart.go<span class="hl-str">`</span> doesn<span class="hl-str">'t return an error for negative quantity.
+
+Also, if I add a negative quantity, `TotalCents` will subtract from the total.
+
+Let'</span>s look at <span class="hl-str">`</span>TotalCents<span class="hl-str">`</span> again.
+<span class="hl-str">`</span>lineTotal := item.Quantity * item.UnitPriceCents<span class="hl-str">`</span>
+If quantity is negative, <span class="hl-str">`</span>lineTotal<span class="hl-str">`</span> is negative.
+
+Another thing: <span class="hl-str">`</span>ApplyCoupon<span class="hl-str">`</span> allows any <span class="hl-str">`</span>percentOff<span class="hl-str">`</span>. If <span class="hl-str">`</span>percentOff<span class="hl-str">`</span> is 110, the total becomes negative.
+
+The <span class="hl-str">`</span>Inventory<span class="hl-str">`</span> <span class="hl-builtin">type</span> is just a <span class="hl-str">`</span>map[string]int<span class="hl-str">`</span>.
+
+Grug brain feedback:
+- <span class="hl-str">`</span>Add<span class="hl-str">`</span> <span class="hl-builtin">let</span> negative quantity in. Bad. Grug reach <span class="hl-kw">for</span> club.
+- <span class="hl-str">`</span>ApplyCoupon<span class="hl-str">`</span> <span class="hl-builtin">let</span> any number in. Big brain say <span class="hl-str">"percent"</span>, grug say <span class="hl-str">"where limit?"</span>.
+- Tests fail. Very bad.
+
+Let<span class="hl-str">'s double check the code for other "big brain" things or "complexity".
+The code is actually quite simple. But it'</span>s buggy.
+
+Wait, the <span class="hl-str">`</span>Add<span class="hl-str">`</span> method takes <span class="hl-str">`</span>quantity<span class="hl-str">`</span>. If I add the same SKU twice, it just appends to the slice. <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> <span class="hl-kw">then</span> checks inventory <span class="hl-kw">for</span> each item separately?
+No, <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> does:
+<span class="hl-str">```</span>go
+        <span class="hl-kw">for</span> _, item := range c.Items {
+                available := inventory[item.SKU]
+                <span class="hl-kw">if</span> available &lt; item.Quantity {
+                        <span class="hl-kw">return</span> fmt.Errorf(<span class="hl-str">"not enough inventory for %s"</span>, item.SKU)
+                }
+        }
+<span class="hl-str">```</span>
+If I have:
+Items: <span class="hl-str">`</span>[{SKU: <span class="hl-str">"coffee"</span>, Quantity: 2}, {SKU: <span class="hl-str">"coffee"</span>, Quantity: 2}]<span class="hl-str">`</span>
+And Inventory: <span class="hl-str">`</span>{<span class="hl-str">"coffee"</span>: 3}<span class="hl-str">`</span>
+The first item (2) is <span class="hl-str">`</span>&lt; 3<span class="hl-str">`</span> (ok).
+The second item (2) is <span class="hl-str">`</span>&lt; 3<span class="hl-str">`</span> (ok).
+But total requested is 4, and only <span class="hl-num">3</span> available. <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> returns <span class="hl-str">`</span>nil<span class="hl-str">`</span>.
+This is a bug. It should sum quantities per SKU before checking inventory or decrement inventory as it goes.
+
+Grug review:
+1. <span class="hl-str">`</span>Add<span class="hl-str">`</span> allow negative quantity. (Bug)
+2. <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> not count total quantity of same item. (Bug)
+3. <span class="hl-str">`</span>ApplyCoupon<span class="hl-str">`</span> no check <span class="hl-kw">for</span> limits. (Potential bug/bad API)
+4. Tests failing. (Very bad)
+
+I will write the feedback now.
+
+grug look at code. grug find many thing make grug reach <span class="hl-kw">for</span> club.
+
+**1. Negative Quantity Bug**
+<span class="hl-str">`</span>cart.go:24<span class="hl-str">`</span> - <span class="hl-str">`</span>Add<span class="hl-str">`</span> <span class="hl-builtin">let</span> negative quantity in.
+<span class="hl-str">`</span>cart_test.go:20<span class="hl-str">`</span> try to catch this, but <span class="hl-str">`</span>Add<span class="hl-str">`</span> not check <span class="hl-kw">for</span> it.
+Test fail. Grug hate failing test.
+Why <span class="hl-builtin">let</span> negative coffee in cart? Now grug owe store coffee? No.
+Fix: check <span class="hl-str">`</span>quantity &lt; 0<span class="hl-str">`</span> in <span class="hl-str">`</span>Add<span class="hl-str">`</span>.
+
+**2. Inventory Logic Broken**
+<span class="hl-str">`</span>cart.go:59<span class="hl-str">`</span> - <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> have big brain error.
+If grug add <span class="hl-str">"coffee"</span> <span class="hl-num">2</span> times, once <span class="hl-num">2</span> units, once <span class="hl-num">2</span> units, total 4.
+If store have <span class="hl-num">3</span> coffee, <span class="hl-str">`</span>Checkout<span class="hl-str">`</span> look at first item (<span class="hl-num">2</span> &lt; <span class="hl-num">3</span> ok), look at second item (<span class="hl-num">2</span> &lt; <span class="hl-num">3</span> ok).
+<span class="hl-str">`</span>Checkout<span class="hl-str">`</span> say <span class="hl-str">"yes"</span>, but store only have 3!
+Grug try to take 4, store have 3. Grug get hit with club.
+Fix: sum quantities of same SKU before check inventory.
+
+**3. Coupon API too Loose**
+<span class="hl-str">`</span>cart.go:40<span class="hl-str">`</span> - <span class="hl-str">`</span>ApplyCoupon<span class="hl-str">`</span> take <span class="hl-str">`</span>percentOff int<span class="hl-str">`</span>.
+What <span class="hl-kw">if</span> grug put 110? Now item cost negative money? Store pay grug to take coffee?
+What <span class="hl-kw">if</span> grug put -50? Now coffee cost more?
+API too trusty. API make grug think too much about what happen when number big or small.
+Fix: limit <span class="hl-str">`</span>percentOff<span class="hl-str">`</span> between <span class="hl-num">0</span> and 100.
+
+**Summary**
+Code simple, but logic leaky. Fix bugs or grug use club.
+
+--- <span class="hl-kw">done</span>: <span class="hl-num">11285</span> input tokens, <span class="hl-num">1719</span> output tokens ---
+</code></pre>
+      <p>Note the input tokens are about the same, but the output tokens are greatly increased. This is apparently about <strong>~29% more expensive that the no thinking run</strong>, around 0.1$ at the current Anthropic API prices (Claude Opus 4.8 Input: $5/M | Output: $25/M).</p>
+      <p>Of course we did not use Opus, it's an expensive model. Pretty expensive if such a minimal agentic usage costs already 0.1$. Or I thought it was surprisingly expensive for such a small thing, dunno about you.</p>
+      <p>Bit sad I didn't record the time it took for these runs, but the "perfomance" of the inference APIs is all over the place, so YMMV even if I would have did recorded the time it took. I'd have to run a lot runs before I can give a confident average time for the run.</p>
+      <p>Adding thinking support was super straight forward thanks to <a href="https://github.com/charmbracelet/fantasy/">fantasy</a>. I did have to complain to Claude a bit so that it fact-checks what effort levels each provider supports. It came up with this which seems legit to me. But since I don't even use all of these providers for time being I'm not going to try and verify this:</p>
+      <pre><code class="language-go"><span class="hl-kw">const</span> (
+	EffortNone    Effort = <span class="hl-str">"none"</span>    <span class="hl-com">// OpenAI</span>
+	EffortMinimal Effort = <span class="hl-str">"minimal"</span> <span class="hl-com">// OpenAI, Google (maps to MINIMAL)</span>
+	EffortLow     Effort = <span class="hl-str">"low"</span>     <span class="hl-com">// Anthropic, OpenAI, Google</span>
+	EffortMedium  Effort = <span class="hl-str">"medium"</span>  <span class="hl-com">// Anthropic, OpenAI, Google</span>
+	EffortHigh    Effort = <span class="hl-str">"high"</span>    <span class="hl-com">// Anthropic, OpenAI, Google</span>
+	EffortXHigh   Effort = <span class="hl-str">"xhigh"</span>   <span class="hl-com">// Anthropic, OpenAI</span>
+	EffortMax     Effort = <span class="hl-str">"max"</span>     <span class="hl-com">// Anthropic</span>
+)</code></pre>
+      <p>It's funny how Anthropic and OpenAI seem to have some sort of competition here too, with Anthropic coming ahead with their <code>max</code> effort, lol.</p>
+      <h2 id="conclusion">Conclusion<a class="heading-anchor" href="#conclusion" aria-label="Link to this section">#</a></h2>
+      <p>Next we sort of should discuss the Sandbox and Session (persistency) stuff I've worked on. But, the problem with that work has turned out to be that <strong>I don't know what I want</strong>. I don't have a design, because I'm not yet sure how to interact with the agent. I'm used to local coding agents, and I've used some async ones connected to GitHub for example, but I'll be running something more persistent than the ones I've experienced so far. (that I have decided to try, for now at least)</p>
+      <p>I think I'll need to whip something up quickly and get to really running this, so I know what I want (and don't want). Earlier I would have had to design <em>something</em> upfront but now I think I'll skip ahead a bit letting Claude make more design choices than usual so that I can learn. Importantly, need to keep a reasonable shape in the code dependencies, and then later come back to refactor aggressively. Let's see how that will go...</p>
+
+    </article>
+  </div>
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const toggle = document.querySelector('.theme-toggle');
+      if (!toggle) return;
+
+      const storageKey = 'maikfi-theme';
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = (theme) => {
+        if (theme === 'light' || theme === 'dark') {
+          root.setAttribute('data-theme', theme);
+        } else {
+          root.removeAttribute('data-theme');
+        }
+
+        const effective = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const label = effective === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        toggle.setAttribute('aria-pressed', effective === 'dark');
+        toggle.setAttribute('aria-label', label);
+        toggle.setAttribute('title', label);
+      };
+
+      const stored = localStorage.getItem(storageKey);
+      const initial = stored === 'light' || stored === 'dark' ? stored : null;
+      if (stored && !initial) {
+        localStorage.removeItem(storageKey);
+      }
+      applyTheme(initial);
+
+      toggle.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme') || (mediaQuery.matches ? 'dark' : 'light');
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(storageKey, next);
+        applyTheme(next);
+      });
+
+      mediaQuery.addEventListener('change', (event) => {
+        if (!localStorage.getItem(storageKey)) {
+          applyTheme(event.matches ? 'dark' : 'light');
+        }
+      });
+    }());
+  </script>
+</body>
+</html>

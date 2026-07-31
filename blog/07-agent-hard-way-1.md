@@ -26,6 +26,8 @@ The Responses API from OpenAI is the newer and now _recommended_ API to replace 
 
 The Messages API from Anthropic is currently one that is perhaps technically most pleasing because it really treats the LLM as an LLM in the API. It is an API to run inference on a machine, nothing more (well not true... there are built-in tools and such). It's not quite perfect, but I found that it makes the most sense to me and it's still completely stateless. So I chose to implement an agent using the Anthropic API because the OpenAI's Chat Completions API looks a bit awkward with agentic use, and Responses API isn't clicking for me.
 
+edit. spotted this [Session Portability](https://earendil.com/posts/session-portability/) article from Earendil after writing this and nodded my head a lot after having done my own brief research on the direction of the OpenAI APIs. I recommend reading that before using a stateful API!
+
 ## Generating a Message
 
 Let's get to the code. We'll approach the exercise mostly via writing tests, because that is perfect way to try something out with Go. But we do need something to test, so let's write some code that talks to the Anthropic API.
