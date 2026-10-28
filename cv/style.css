@@ -110,8 +110,10 @@ p.align {
 .side-by-side {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: flex-start;
-    gap: 4em;
+    column-gap: 4em;
+    row-gap: 0;
     padding-top: 1em;
     padding-bottom: 1em;
 }
@@ -125,6 +127,8 @@ p.align {
     text-decoration: none;
     display: inline-block;
     border-radius: 10px;
+    font-size: 1em;
+    cursor: pointer;
 }
 
 #profile-pic {
@@ -157,11 +161,70 @@ p.align {
 
     .side-by-side {
         padding: 0;
-        gap: 0;
+    }
+
+    .side-by-side section+section {
+        margin-top: 0;
     }
 
     section {
         padding-top: 0em;
         padding-bottom: 0em;
+    }
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 15mm 0;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    html {
+        font-size: 10pt;
+    }
+
+    body {
+        background-color: white;
+        max-width: none;
+        margin: 0;
+        padding: 0 18mm;
+    }
+
+    .no-print {
+        display: none;
+    }
+
+    hero {
+        padding-top: 0;
+    }
+
+    #profile-pic {
+        width: 150px;
+        height: 150px;
+    }
+
+    section {
+        padding-bottom: 0.5em;
+    }
+
+    li {
+        margin-top: 0.4em;
+        line-height: 1.5em;
+    }
+
+    h2,
+    h3,
+    h4 {
+        break-after: avoid;
+    }
+
+    p,
+    li {
+        break-inside: avoid;
     }
 }
